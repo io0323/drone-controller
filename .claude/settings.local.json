@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew :composeApp:assembleDebug)",
+      "Bash(curl -s \"https://repo.maven.apache.org/maven2/io/mavsdk/mavsdk/maven-metadata.xml\")",
+      "Bash(curl -s \"https://repo.maven.apache.org/maven2/io/mavsdk/mavsdk/3.16.0/mavsdk-3.16.0.pom\")",
+      "Bash(./gradlew :composeApp:assembleDebug --no-configuration-cache)",
+      "Bash(jar tf:*)",
+      "Bash(javap:*)",
+      "Bash(grep \"\\\\.class$\")",
+      "Bash(./gradlew :composeApp:testDebugUnitTest --no-configuration-cache)"
+    ]
+  }
+}
