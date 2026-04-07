@@ -1,12 +1,11 @@
 package com.io.dronecontroller
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import com.io.dronecontroller.ui.connection.ConnectionScreen
+import com.io.dronecontroller.ui.controller.DroneControllerScreen
 
 @Composable
 fun App() {
-    MaterialTheme {
-        ConnectionScreen()
-    }
+    // UIモック: ドローンコントローラー画面を直接表示
+    // 実装後は ConnectionScreen → DroneControllerScreen のナビゲーションに変更する
+    DroneControllerScreen()
 }
