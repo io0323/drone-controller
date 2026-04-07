@@ -1,10 +1,15 @@
 package com.io.dronecontroller.data.datasource
 
 import com.io.dronecontroller.domain.model.ConnectionStatus
+import com.io.dronecontroller.domain.model.DroneState
+import com.io.dronecontroller.domain.model.RunStatus
 import io.mavsdk.System as MavsdkSystem
+import kotlin.math.sqrt
+import kotlin.coroutines.resume
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 class MavlinkDataSource : MavlinkDataSourceContract {
 
@@ -37,8 +42,118 @@ class MavlinkDataSource : MavlinkDataSourceContract {
         }
     }
 
+    override fun observeDroneState(address: String, port: Int): Flow<DroneState> = callbackFlow {
+        val system = MavsdkSystem(address, port).also { drone = it }
+        var altitudeMeters = 0f
+        var batteryPercent = 0
+        var speedKmh = 0f
+        var satelliteCount = 0
+        var connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected
+        var isArmed = false
+
+        fun sendCurrent() {
+            trySend(
+                DroneState(
+                    altitudeMeters = altitudeMeters,
+                    batteryPercent = batteryPercent,
+                    speedKmh = speedKmh,
+                    satelliteCount = satelliteCount,
+                    connectionStatus = connectionStatus,
+                    isArmed = isArmed
+                )
+            )
+        }
+
+        val disposables = listOf(
+            system.core.connectionState.subscribe(
+                { state ->
+                    connectionStatus = if (state.isConnected == true) {
+                        ConnectionStatus.Connected(System.currentTimeMillis())
+                    } else {
+                        ConnectionStatus.Disconnected
+                    }
+                    sendCurrent()
+                },
+                { }
+            ),
+            system.telemetry.position.subscribe(
+                { pos ->
+                    altitudeMeters = pos.relativeAltitudeM
+                    sendCurrent()
+                },
+                { }
+            ),
+            system.telemetry.battery.subscribe(
+                { bat ->
+                    batteryPercent = (bat.remainingPercent * 100).toInt().coerceIn(0, 100)
+                    sendCurrent()
+                },
+                { }
+            ),
+            system.telemetry.velocityNed.subscribe(
+                { vel ->
+                    speedKmh = sqrt(vel.northMS * vel.northMS + vel.eastMS * vel.eastMS) * 3.6f
+                    sendCurrent()
+                },
+                { }
+            ),
+            system.telemetry.gpsInfo.subscribe(
+                { gps ->
+                    satelliteCount = gps.numSatellites
+                    sendCurrent()
+                },
+                { }
+            ),
+            system.telemetry.armed.subscribe(
+                { armed ->
+                    isArmed = armed
+                    sendCurrent()
+                },
+                { }
+            )
+        )
+
+        awaitClose {
+            disposables.forEach { it.dispose() }
+            system.dispose()
+        }
+    }
+
     override fun disconnect() {
         drone?.dispose()
         drone = null
+    }
+
+    override suspend fun takeoff(altitudeMeters: Float): RunStatus<Unit> {
+        val system = drone ?: return RunStatus.Error("未接続")
+        return suspendCancellableCoroutine { cont ->
+            val disposable = system.action.takeoff().subscribe(
+                { cont.resume(RunStatus.Success(Unit)) },
+                { e -> cont.resume(RunStatus.Error(e.message ?: "離陸コマンド失敗", e)) }
+            )
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
+    }
+
+    override suspend fun land(): RunStatus<Unit> {
+        val system = drone ?: return RunStatus.Error("未接続")
+        return suspendCancellableCoroutine { cont ->
+            val disposable = system.action.land().subscribe(
+                { cont.resume(RunStatus.Success(Unit)) },
+                { e -> cont.resume(RunStatus.Error(e.message ?: "着陸コマンド失敗", e)) }
+            )
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
+    }
+
+    override suspend fun returnToLaunch(): RunStatus<Unit> {
+        val system = drone ?: return RunStatus.Error("未接続")
+        return suspendCancellableCoroutine { cont ->
+            val disposable = system.action.returnToLaunch().subscribe(
+                { cont.resume(RunStatus.Success(Unit)) },
+                { e -> cont.resume(RunStatus.Error(e.message ?: "RTLコマンド失敗", e)) }
+            )
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
     }
 }

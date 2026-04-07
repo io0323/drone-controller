@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +18,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.io.dronecontroller.domain.model.ConnectionStatus
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * ドローンコントローラーのメイン操作画面
@@ -32,7 +36,15 @@ import androidx.compose.ui.unit.dp
  *  - HelpButton         右下端ヘルプボタン
  */
 @Composable
-fun DroneControllerScreen() {
+fun DroneControllerScreen(
+    viewModel: DroneControllerViewModelContract = koinViewModel<DroneControllerViewModel>()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.startObserving()
+    }
+
     // 左右ジョイスティックの値を管理（-1.0〜1.0）
     var leftJoystickX by remember { mutableStateOf(0f) }
     var leftJoystickY by remember { mutableStateOf(0f) }
@@ -49,14 +61,19 @@ fun DroneControllerScreen() {
         StatusChips(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(start = 12.dp, top = 14.dp)
+                .padding(start = 12.dp, top = 14.dp),
+            batteryPercent = uiState.batteryPercent,
+            satelliteCount = uiState.satelliteCount,
+            isConnected = uiState.connectionStatus is ConnectionStatus.Connected
         )
 
         // ─── 上中央フライト情報 ──────────────────────────────────
         FlightInfoPanel(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 14.dp)
+                .padding(top = 14.dp),
+            altitudeMeters = uiState.altitudeMeters,
+            speedKmh = uiState.speedKmh
         )
 
         // ─── 右上アクションボタン ────────────────────────────────
@@ -69,6 +86,19 @@ fun DroneControllerScreen() {
         // ─── 中央ターゲットマーカー ──────────────────────────────
         CenterTargetMarker(
             modifier = Modifier.align(Alignment.Center)
+        )
+
+        // ─── 中央: コマンドボタン（離陸・着陸・RTL） ────────────
+        CommandButtons(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(top = 80.dp),
+            isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
+            isArmed = uiState.isArmed,
+            commandStatus = uiState.commandStatus,
+            onTakeoff = { viewModel.takeoff() },
+            onLand = { viewModel.land() },
+            onReturnToLaunch = { viewModel.returnToLaunch() }
         )
 
         // ─── 下中央カメラボタン（ジョイスティック値を反映） ───────
@@ -228,5 +258,5 @@ fun ScreenGridOverlay() {
 )
 @Composable
 private fun DroneControllerScreenPreview() {
-    DroneControllerScreen()
+    DroneControllerScreen(viewModel = MockDroneControllerViewModel())
 }
