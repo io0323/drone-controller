@@ -24,6 +24,9 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -41,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.io.dronecontroller.domain.model.RunStatus
 
 // ============================================================
 // デザイントークン（カスタマイズポイント）
@@ -70,24 +74,34 @@ private val RedAccent = Color(0xFFFC6868)
  * （通信品質 / バッテリー / 衛星数）
  */
 @Composable
-fun StatusChips(modifier: Modifier = Modifier) {
+fun StatusChips(
+    modifier: Modifier = Modifier,
+    batteryPercent: Int = 0,
+    satelliteCount: Int = 0,
+    isConnected: Boolean = false
+) {
+    val batteryTint = when {
+        batteryPercent >= 50 -> GreenAccent
+        batteryPercent >= 20 -> OrangeAccent
+        else -> RedAccent
+    }
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         StatusChip(
             icon = Icons.Default.SignalCellularAlt,
-            label = "HD",
-            iconTint = GreenAccent
+            label = if (isConnected) "HD" else "--",
+            iconTint = if (isConnected) GreenAccent else Color.Gray
         )
         StatusChip(
             icon = Icons.Default.Battery6Bar,
-            label = "87%",
-            iconTint = GreenAccent
+            label = "$batteryPercent%",
+            iconTint = batteryTint
         )
         StatusChip(
             icon = Icons.Default.Satellite,
-            label = "12",
+            label = "$satelliteCount",
             iconTint = BlueAccent
         )
     }
@@ -131,28 +145,27 @@ private fun StatusChip(
 
 /**
  * 画面上部中央に表示するフライト情報チップ群
- * （距離 / 速度 / 高度）
+ * （速度 / 高度）
  */
 @Composable
-fun FlightInfoPanel(modifier: Modifier = Modifier) {
+fun FlightInfoPanel(
+    modifier: Modifier = Modifier,
+    altitudeMeters: Float = 0f,
+    speedKmh: Float = 0f
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         FlightInfoChip(
-            icon = Icons.Default.Navigation,
-            value = "45.2m",
-            iconTint = BlueAccent
-        )
-        FlightInfoChip(
             icon = Icons.Default.Speed,
-            value = "12.5 km/h",
+            value = "${"%.1f".format(speedKmh)} km/h",
             iconTint = OrangeAccent
         )
         FlightInfoChip(
             icon = Icons.Default.LocationOn,
-            value = "234m",
+            value = "${"%.1f".format(altitudeMeters)} m",
             iconTint = RedAccent
         )
     }
@@ -386,19 +399,134 @@ fun HelpButton(modifier: Modifier = Modifier) {
 }
 
 // ============================================================
+// CommandButtons — 中央コマンドボタン群（離陸・着陸・RTL）
+// ============================================================
+
+/**
+ * 画面中央下部に表示するフライトコマンドボタン群
+ *
+ * @param isConnected    接続中フラグ（falseなら全ボタン非活性）
+ * @param isArmed        アーム済みフラグ（falseなら離陸ボタン非活性）
+ * @param commandStatus  コマンド実行状態（ローディング・エラー表示に使用）
+ * @param onTakeoff      離陸コールバック
+ * @param onLand         着陸コールバック
+ * @param onReturnToLaunch RTLコールバック
+ */
+@Composable
+fun CommandButtons(
+    modifier: Modifier = Modifier,
+    isConnected: Boolean = false,
+    isArmed: Boolean = false,
+    commandStatus: RunStatus<Unit>? = null,
+    onTakeoff: () -> Unit = {},
+    onLand: () -> Unit = {},
+    onReturnToLaunch: () -> Unit = {}
+) {
+    val isLoading = commandStatus is RunStatus.Loading
+    val errorMessage = (commandStatus as? RunStatus.Error)?.message
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
+            )
+        }
+        if (errorMessage != null) {
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = Color(0xCCCC3333)
+            ) {
+                Text(
+                    text = errorMessage,
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                )
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CommandButton(
+                label = "離陸",
+                enabled = isConnected && isArmed && !isLoading,
+                color = Color(0xFF4ADE80),
+                onClick = onTakeoff
+            )
+            CommandButton(
+                label = "着陸",
+                enabled = isConnected && !isLoading,
+                color = Color(0xFF60A5FA),
+                onClick = onLand
+            )
+            CommandButton(
+                label = "RTL",
+                enabled = isConnected && !isLoading,
+                color = Color(0xFFFB923C),
+                onClick = onReturnToLaunch
+            )
+        }
+    }
+}
+
+@Composable
+private fun CommandButton(
+    label: String,
+    enabled: Boolean,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = color.copy(alpha = 0.85f),
+            disabledContainerColor = Color(0x55888888)
+        ),
+        modifier = Modifier.height(34.dp)
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (enabled) Color.Black else Color.White.copy(alpha = 0.4f)
+        )
+    }
+}
+
+// ============================================================
 // Preview
 // ============================================================
 
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF1A2024)
 @Composable
+private fun CommandButtonsConnectedPreview() {
+    CommandButtons(isConnected = true, isArmed = true)
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF1A2024)
+@Composable
+private fun CommandButtonsDisconnectedPreview() {
+    CommandButtons(isConnected = false, isArmed = false)
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF1A2024)
+@Composable
 private fun StatusChipsPreview() {
-    StatusChips()
+    StatusChips(batteryPercent = 87, satelliteCount = 12, isConnected = true)
 }
 
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF1A2024)
 @Composable
 private fun FlightInfoPanelPreview() {
-    FlightInfoPanel()
+    FlightInfoPanel(altitudeMeters = 25.3f, speedKmh = 12.5f)
 }
 
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF1A2024)
