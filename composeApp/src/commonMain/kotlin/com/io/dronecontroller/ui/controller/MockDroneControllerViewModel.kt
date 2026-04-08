@@ -14,7 +14,10 @@ class MockDroneControllerViewModel : DroneControllerViewModelContract {
             speedKmh = 12.5f,
             satelliteCount = 12,
             connectionStatus = ConnectionStatus.Connected(lastHeartbeatAt = 0L),
-            isArmed = true
+            isArmed = true,
+            latitude = 35.6762,
+            longitude = 139.6503,
+            bearing = 45f
         )
     )
     override val uiState: StateFlow<DroneControllerUiState> = _uiState
@@ -32,5 +35,9 @@ class MockDroneControllerViewModel : DroneControllerViewModelContract {
 
     override fun returnToLaunch() {
         _uiState.update { it.copy(commandStatus = RunStatus.Success(Unit)) }
+    }
+
+    override fun toggleMapMode() {
+        _uiState.update { it.copy(isMapMode = !it.isMapMode) }
     }
 }

@@ -6,5 +6,8 @@ data class DroneState(
     val speedKmh: Float = 0f,
     val satelliteCount: Int = 0,
     val connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected,
-    val isArmed: Boolean = false
+    val isArmed: Boolean = false,
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val bearing: Float = 0f
 )

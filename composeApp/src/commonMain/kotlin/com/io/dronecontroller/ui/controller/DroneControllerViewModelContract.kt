@@ -9,4 +9,5 @@ interface DroneControllerViewModelContract {
     fun takeoff(altitude: Float = 5f)
     fun land()
     fun returnToLaunch()
+    fun toggleMapMode()
 }

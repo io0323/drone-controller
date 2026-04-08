@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.io.dronecontroller.domain.model.ConnectionStatus
+import com.io.dronecontroller.ui.map.DroneMapView
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -53,9 +54,18 @@ fun DroneControllerScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // ─── 背景 ────────────────────────────────────────────────
-        CameraBackground()
-        ScreenGridOverlay()
+        // ─── 背景（地図 or カメラ映像風） ──────────────────────────
+        if (uiState.isMapMode) {
+            DroneMapView(
+                latitude = uiState.latitude,
+                longitude = uiState.longitude,
+                bearing = uiState.bearing,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            CameraBackground()
+            ScreenGridOverlay()
+        }
 
         // ─── 左上ステータス ───────────────────────────────────────
         StatusChips(
@@ -80,7 +90,9 @@ fun DroneControllerScreen(
         TopRightActionButtons(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(end = 12.dp, top = 14.dp)
+                .padding(end = 12.dp, top = 14.dp),
+            isMapMode = uiState.isMapMode,
+            onToggleMap = { viewModel.toggleMapMode() }
         )
 
         // ─── 中央ターゲットマーカー ──────────────────────────────

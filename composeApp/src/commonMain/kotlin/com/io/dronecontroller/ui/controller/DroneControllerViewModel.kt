@@ -37,7 +37,10 @@ class DroneControllerViewModel(
                         speedKmh = state.speedKmh,
                         satelliteCount = state.satelliteCount,
                         connectionStatus = state.connectionStatus,
-                        isArmed = state.isArmed
+                        isArmed = state.isArmed,
+                        latitude = state.latitude,
+                        longitude = state.longitude,
+                        bearing = state.bearing
                     )
                 }
             }
@@ -71,5 +74,9 @@ class DroneControllerViewModel(
             val result = returnToLaunchUseCase()
             _uiState.update { it.copy(commandStatus = result) }
         }
+    }
+
+    override fun toggleMapMode() {
+        _uiState.update { it.copy(isMapMode = !it.isMapMode) }
     }
 }

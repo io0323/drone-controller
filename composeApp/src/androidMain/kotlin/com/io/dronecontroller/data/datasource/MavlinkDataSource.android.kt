@@ -50,6 +50,9 @@ class MavlinkDataSource : MavlinkDataSourceContract {
         var satelliteCount = 0
         var connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected
         var isArmed = false
+        var latitude = 0.0
+        var longitude = 0.0
+        var bearing = 0f
 
         fun sendCurrent() {
             trySend(
@@ -59,7 +62,10 @@ class MavlinkDataSource : MavlinkDataSourceContract {
                     speedKmh = speedKmh,
                     satelliteCount = satelliteCount,
                     connectionStatus = connectionStatus,
-                    isArmed = isArmed
+                    isArmed = isArmed,
+                    latitude = latitude,
+                    longitude = longitude,
+                    bearing = bearing
                 )
             )
         }
@@ -79,6 +85,8 @@ class MavlinkDataSource : MavlinkDataSourceContract {
             system.telemetry.position.subscribe(
                 { pos ->
                     altitudeMeters = pos.relativeAltitudeM
+                    latitude = pos.latitudeDeg
+                    longitude = pos.longitudeDeg
                     sendCurrent()
                 },
                 { }
@@ -107,6 +115,13 @@ class MavlinkDataSource : MavlinkDataSourceContract {
             system.telemetry.armed.subscribe(
                 { armed ->
                     isArmed = armed
+                    sendCurrent()
+                },
+                { }
+            ),
+            system.telemetry.heading.subscribe(
+                { heading ->
+                    bearing = heading.headingDeg.toFloat()
                     sendCurrent()
                 },
                 { }
