@@ -22,6 +22,16 @@ import com.io.dronecontroller.domain.usecase.SendManualControlUseCase
 import com.io.dronecontroller.domain.usecase.SendManualControlUseCaseContract
 import com.io.dronecontroller.domain.usecase.TakeoffUseCase
 import com.io.dronecontroller.domain.usecase.TakeoffUseCaseContract
+import com.io.dronecontroller.domain.usecase.UploadMissionUseCase
+import com.io.dronecontroller.domain.usecase.UploadMissionUseCaseContract
+import com.io.dronecontroller.domain.usecase.StartMissionUseCase
+import com.io.dronecontroller.domain.usecase.StartMissionUseCaseContract
+import com.io.dronecontroller.domain.usecase.StopMissionUseCase
+import com.io.dronecontroller.domain.usecase.StopMissionUseCaseContract
+import com.io.dronecontroller.domain.usecase.PauseMissionUseCase
+import com.io.dronecontroller.domain.usecase.PauseMissionUseCaseContract
+import com.io.dronecontroller.domain.usecase.ObserveMissionProgressUseCase
+import com.io.dronecontroller.domain.usecase.ObserveMissionProgressUseCaseContract
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -37,4 +47,9 @@ val useCaseModule: Module = module {
     single<DisconnectBleDeviceUseCaseContract> { DisconnectBleDeviceUseCase(get()) }
     single<ObserveBleConnectionStatusUseCaseContract> { ObserveBleConnectionStatusUseCase(get()) }
     single<ObserveBleControllerStateUseCaseContract> { ObserveBleControllerStateUseCase(get()) }
+    single<UploadMissionUseCaseContract> { UploadMissionUseCase(get()) }
+    single<StartMissionUseCaseContract> { StartMissionUseCase(get()) }
+    single<StopMissionUseCaseContract> { StopMissionUseCase(get()) }
+    single<PauseMissionUseCaseContract> { PauseMissionUseCase(get()) }
+    single<ObserveMissionProgressUseCaseContract> { ObserveMissionProgressUseCase(get()) }
 }

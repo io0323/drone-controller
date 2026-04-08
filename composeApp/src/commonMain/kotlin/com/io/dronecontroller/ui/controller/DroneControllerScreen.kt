@@ -40,6 +40,7 @@ import org.koin.compose.viewmodel.koinViewModel
  */
 @Composable
 fun DroneControllerScreen(
+    onNavigateToMission: (lat: Double, lng: Double) -> Unit = { _, _ -> },
     viewModel: DroneControllerViewModelContract = koinViewModel<DroneControllerViewModel>()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -102,7 +103,8 @@ fun DroneControllerScreen(
             isMapMode = uiState.isMapMode,
             isBleConnected = isBleConnected,
             onToggleMap = { viewModel.toggleMapMode() },
-            onOpenBleSettings = { showBleSettings = true }
+            onOpenBleSettings = { showBleSettings = true },
+            onOpenMission = { onNavigateToMission(uiState.latitude, uiState.longitude) }
         )
 
         // ─── 中央ターゲットマーカー ──────────────────────────────

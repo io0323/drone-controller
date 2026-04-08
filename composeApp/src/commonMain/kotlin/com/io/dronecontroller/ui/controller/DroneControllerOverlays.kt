@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Satellite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalCellularAlt
@@ -234,7 +235,8 @@ fun TopRightActionButtons(
     isMapMode: Boolean = false,
     isBleConnected: Boolean = false,
     onToggleMap: () -> Unit = {},
-    onOpenBleSettings: () -> Unit = {}
+    onOpenBleSettings: () -> Unit = {},
+    onOpenMission: () -> Unit = {}
 ) {
     Column(
         modifier = modifier,
@@ -256,6 +258,12 @@ fun TopRightActionButtons(
             contentDescription = if (isMapMode) "カメラ映像に切替" else "地図に切替",
             tint = if (isMapMode) GreenAccent else Color.White,
             onClick = onToggleMap
+        )
+        ActionCircleButton(
+            icon = Icons.Default.Route,
+            contentDescription = "ミッション計画",
+            tint = BlueAccent,
+            onClick = onOpenMission
         )
     }
 }
