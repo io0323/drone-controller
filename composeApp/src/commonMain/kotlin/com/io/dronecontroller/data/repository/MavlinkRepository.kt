@@ -26,4 +26,7 @@ class MavlinkRepository(
 
     override suspend fun returnToLaunch(): RunStatus<Unit> =
         dataSource.returnToLaunch()
+
+    override fun sendManualControl(pitch: Float, roll: Float, throttle: Float, yaw: Float) =
+        dataSource.sendManualControl(pitch, roll, throttle, yaw)
 }

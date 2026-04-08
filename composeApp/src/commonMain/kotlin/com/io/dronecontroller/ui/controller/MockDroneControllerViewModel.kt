@@ -40,4 +40,6 @@ class MockDroneControllerViewModel : DroneControllerViewModelContract {
     override fun toggleMapMode() {
         _uiState.update { it.copy(isMapMode = !it.isMapMode) }
     }
+
+    override fun updateJoystickInput(leftX: Float, leftY: Float, rightX: Float, rightY: Float) = Unit
 }

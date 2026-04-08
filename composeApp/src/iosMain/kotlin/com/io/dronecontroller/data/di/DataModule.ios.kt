@@ -3,5 +3,10 @@ package com.io.dronecontroller.data.di
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-// iOS向けMAVLink実装は将来対応
-actual val dataSourceModule: Module = module {}
+import com.io.dronecontroller.data.datasource.BleDataSourceContract
+import com.io.dronecontroller.data.datasource.BleDataSourceStub
+
+// iOS向けMAVLink/BLE実装は将来対応
+actual val dataSourceModule: Module = module {
+    single<BleDataSourceContract> { BleDataSourceStub() }
+}

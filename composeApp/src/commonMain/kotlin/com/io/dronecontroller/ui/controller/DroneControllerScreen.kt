@@ -18,7 +18,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.io.dronecontroller.domain.model.BleConnectionStatus
 import com.io.dronecontroller.domain.model.ConnectionStatus
+import com.io.dronecontroller.ui.ble.BleSettingsScreen
 import com.io.dronecontroller.ui.map.DroneMapView
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -46,11 +48,16 @@ fun DroneControllerScreen(
         viewModel.startObserving()
     }
 
+    var showBleSettings by remember { mutableStateOf(false) }
+
     // 左右ジョイスティックの値を管理（-1.0〜1.0）
     var leftJoystickX by remember { mutableStateOf(0f) }
     var leftJoystickY by remember { mutableStateOf(0f) }
     var rightJoystickX by remember { mutableStateOf(0f) }
     var rightJoystickY by remember { mutableStateOf(0f) }
+
+    // BLE接続中は物理コントローラー優先のため仮想ジョイスティック入力を抑制
+    val isBleConnected = uiState.bleConnectionStatus is BleConnectionStatus.Connected
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -74,7 +81,8 @@ fun DroneControllerScreen(
                 .padding(start = 12.dp, top = 14.dp),
             batteryPercent = uiState.batteryPercent,
             satelliteCount = uiState.satelliteCount,
-            isConnected = uiState.connectionStatus is ConnectionStatus.Connected
+            isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
+            bleConnectionStatus = uiState.bleConnectionStatus
         )
 
         // ─── 上中央フライト情報 ──────────────────────────────────
@@ -92,7 +100,9 @@ fun DroneControllerScreen(
                 .align(Alignment.TopEnd)
                 .padding(end = 12.dp, top = 14.dp),
             isMapMode = uiState.isMapMode,
-            onToggleMap = { viewModel.toggleMapMode() }
+            isBleConnected = isBleConnected,
+            onToggleMap = { viewModel.toggleMapMode() },
+            onOpenBleSettings = { showBleSettings = true }
         )
 
         // ─── 中央ターゲットマーカー ──────────────────────────────
@@ -124,21 +134,24 @@ fun DroneControllerScreen(
             rightY = rightJoystickY
         )
 
-        // ─── 左下: 上昇/回転スティック ───────────────────────────
+        // ─── 左下: 上昇/回転スティック（BLE接続時はグレーアウト） ──
         VirtualJoystick(
-            label = "上昇/回転",
+            label = if (isBleConnected) "上昇/回転 (BLE)" else "上昇/回転",
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(start = 10.dp, bottom = 22.dp),
             onValueChanged = { x, y ->
                 leftJoystickX = x
                 leftJoystickY = y
+                if (!isBleConnected) {
+                    viewModel.updateJoystickInput(x, y, rightJoystickX, rightJoystickY)
+                }
             }
         )
 
-        // ─── 右下: 移動スティック ────────────────────────────────
+        // ─── 右下: 移動スティック（BLE接続時はグレーアウト） ─────
         VirtualJoystick(
-            label = "移動",
+            label = if (isBleConnected) "移動 (BLE)" else "移動",
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 // HelpButtonの分（34dp）だけ内側に寄せる
@@ -146,6 +159,9 @@ fun DroneControllerScreen(
             onValueChanged = { x, y ->
                 rightJoystickX = x
                 rightJoystickY = y
+                if (!isBleConnected) {
+                    viewModel.updateJoystickInput(leftJoystickX, leftJoystickY, x, y)
+                }
             }
         )
 
@@ -155,6 +171,11 @@ fun DroneControllerScreen(
                 .align(Alignment.BottomEnd)
                 .padding(end = 10.dp, bottom = 10.dp)
         )
+
+        // ─── BLE設定オーバーレイ ─────────────────────────────────
+        if (showBleSettings) {
+            BleSettingsScreen(onDismiss = { showBleSettings = false })
+        }
     }
 }
 
