@@ -11,12 +11,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-class MavlinkDataSource : MavlinkDataSourceContract {
-
-    private var drone: MavsdkSystem? = null
+class MavlinkDataSource(
+    private val droneProvider: DroneProvider
+) : MavlinkDataSourceContract {
 
     override fun observeConnectionState(address: String, port: Int): Flow<ConnectionStatus> = callbackFlow {
-        val system = MavsdkSystem(address, port).also { drone = it }
+        val system = MavsdkSystem(address, port).also { droneProvider.drone = it }
 
         val disposable = system.core.connectionState.subscribe(
             { state ->
@@ -38,12 +38,12 @@ class MavlinkDataSource : MavlinkDataSourceContract {
         awaitClose {
             disposable.dispose()
             system.dispose()
-            drone = null
+            droneProvider.drone = null
         }
     }
 
     override fun observeDroneState(address: String, port: Int): Flow<DroneState> = callbackFlow {
-        val system = MavsdkSystem(address, port).also { drone = it }
+        val system = MavsdkSystem(address, port).also { droneProvider.drone = it }
         var altitudeMeters = 0f
         var batteryPercent = 0
         var speedKmh = 0f
@@ -131,16 +131,17 @@ class MavlinkDataSource : MavlinkDataSourceContract {
         awaitClose {
             disposables.forEach { it.dispose() }
             system.dispose()
+            droneProvider.drone = null
         }
     }
 
     override fun disconnect() {
-        drone?.dispose()
-        drone = null
+        droneProvider.drone?.dispose()
+        droneProvider.drone = null
     }
 
     override suspend fun takeoff(altitudeMeters: Float): RunStatus<Unit> {
-        val system = drone ?: return RunStatus.Error("未接続")
+        val system = droneProvider.drone ?: return RunStatus.Error("未接続")
         return suspendCancellableCoroutine { cont ->
             val disposable = system.action.takeoff().subscribe(
                 { cont.resume(RunStatus.Success(Unit)) },
@@ -151,7 +152,7 @@ class MavlinkDataSource : MavlinkDataSourceContract {
     }
 
     override suspend fun land(): RunStatus<Unit> {
-        val system = drone ?: return RunStatus.Error("未接続")
+        val system = droneProvider.drone ?: return RunStatus.Error("未接続")
         return suspendCancellableCoroutine { cont ->
             val disposable = system.action.land().subscribe(
                 { cont.resume(RunStatus.Success(Unit)) },
@@ -162,7 +163,7 @@ class MavlinkDataSource : MavlinkDataSourceContract {
     }
 
     override suspend fun returnToLaunch(): RunStatus<Unit> {
-        val system = drone ?: return RunStatus.Error("未接続")
+        val system = droneProvider.drone ?: return RunStatus.Error("未接続")
         return suspendCancellableCoroutine { cont ->
             val disposable = system.action.returnToLaunch().subscribe(
                 { cont.resume(RunStatus.Success(Unit)) },
