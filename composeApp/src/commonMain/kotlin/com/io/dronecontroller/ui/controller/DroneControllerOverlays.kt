@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Battery6Bar
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Satellite
 import androidx.compose.material.icons.filled.Settings
@@ -209,10 +210,14 @@ private fun FlightInfoChip(
 
 /**
  * 画面右上に表示する縦並びの円形アクションボタン
- * （設定 / ホーム）
+ * （設定 / ホーム / 地図切替）
  */
 @Composable
-fun TopRightActionButtons(modifier: Modifier = Modifier) {
+fun TopRightActionButtons(
+    modifier: Modifier = Modifier,
+    isMapMode: Boolean = false,
+    onToggleMap: () -> Unit = {}
+) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -226,6 +231,12 @@ fun TopRightActionButtons(modifier: Modifier = Modifier) {
             icon = Icons.Default.Home,
             contentDescription = "ホーム"
         )
+        ActionCircleButton(
+            icon = if (isMapMode) Icons.Default.Navigation else Icons.Default.Map,
+            contentDescription = if (isMapMode) "カメラ映像に切替" else "地図に切替",
+            tint = if (isMapMode) GreenAccent else Color.White,
+            onClick = onToggleMap
+        )
     }
 }
 
@@ -233,7 +244,9 @@ fun TopRightActionButtons(modifier: Modifier = Modifier) {
 @Composable
 private fun ActionCircleButton(
     icon: ImageVector,
-    contentDescription: String
+    contentDescription: String,
+    tint: Color = Color.White,
+    onClick: () -> Unit = {}
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -242,12 +255,12 @@ private fun ActionCircleButton(
             .clip(CircleShape)
             .background(ChipBg)
     ) {
-        IconButton(onClick = {}) {
+        IconButton(onClick = onClick) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
                 modifier = Modifier.size(18.dp),
-                tint = Color.White
+                tint = tint
             )
         }
     }

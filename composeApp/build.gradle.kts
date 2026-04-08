@@ -34,6 +34,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
             implementation(libs.mavsdk)
+            implementation(libs.maps.compose)
+            implementation(libs.play.services.maps)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -48,7 +50,7 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
             // ドローンコントローラーUIで使用するアイコン群
-            implementation(compose.materialIconsExtended)
+            implementation("androidx.compose.material:material-icons-extended:1.7.3")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -70,6 +72,15 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        val localPropsFile = rootProject.file("local.properties")
+        val mapsApiKey = if (localPropsFile.exists()) {
+            localPropsFile.readLines()
+                .firstOrNull { it.startsWith("MAPS_API_KEY=") }
+                ?.removePrefix("MAPS_API_KEY=")
+                ?.trim() ?: ""
+        } else ""
+        manifestPlaceholders["mapsApiKey"] = mapsApiKey
     }
     packaging {
         resources {

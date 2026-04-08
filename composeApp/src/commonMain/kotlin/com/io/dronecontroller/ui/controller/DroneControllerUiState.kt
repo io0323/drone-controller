@@ -10,5 +10,9 @@ data class DroneControllerUiState(
     val satelliteCount: Int = 0,
     val connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected,
     val isArmed: Boolean = false,
-    val commandStatus: RunStatus<Unit>? = null
+    val commandStatus: RunStatus<Unit>? = null,
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val bearing: Float = 0f,
+    val isMapMode: Boolean = false
 )
