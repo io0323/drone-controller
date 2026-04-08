@@ -12,4 +12,5 @@ interface MavlinkDataSourceContract {
     suspend fun takeoff(altitudeMeters: Float): RunStatus<Unit>
     suspend fun land(): RunStatus<Unit>
     suspend fun returnToLaunch(): RunStatus<Unit>
+    fun sendManualControl(pitch: Float, roll: Float, throttle: Float, yaw: Float)
 }

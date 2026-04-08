@@ -171,4 +171,10 @@ class MavlinkDataSource : MavlinkDataSourceContract {
             cont.invokeOnCancellation { disposable.dispose() }
         }
     }
+
+    override fun sendManualControl(pitch: Float, roll: Float, throttle: Float, yaw: Float) {
+        // TODO: io.mavsdk バージョンに合わせて実装
+        // MAVSDK ManualControl plugin の API シグネチャを確認後に有効化:
+        // system.manualControl.setManualControl(roll, pitch, throttle, yaw, 0).subscribe({}, {})
+    }
 }

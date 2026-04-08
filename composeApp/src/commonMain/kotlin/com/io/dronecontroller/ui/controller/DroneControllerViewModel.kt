@@ -2,12 +2,19 @@ package com.io.dronecontroller.ui.controller
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.io.dronecontroller.domain.model.BleConnectionStatus
+import com.io.dronecontroller.domain.model.BleControllerState
+import com.io.dronecontroller.domain.model.ConnectionStatus
 import com.io.dronecontroller.domain.model.RunStatus
 import com.io.dronecontroller.domain.usecase.LandUseCaseContract
+import com.io.dronecontroller.domain.usecase.ObserveBleConnectionStatusUseCaseContract
+import com.io.dronecontroller.domain.usecase.ObserveBleControllerStateUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveDroneStateUseCaseContract
 import com.io.dronecontroller.domain.usecase.ReturnToLaunchUseCaseContract
+import com.io.dronecontroller.domain.usecase.SendManualControlUseCaseContract
 import com.io.dronecontroller.domain.usecase.TakeoffUseCaseContract
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,30 +25,62 @@ class DroneControllerViewModel(
     private val observeDroneState: ObserveDroneStateUseCaseContract,
     private val takeoffUseCase: TakeoffUseCaseContract,
     private val landUseCase: LandUseCaseContract,
-    private val returnToLaunchUseCase: ReturnToLaunchUseCaseContract
+    private val returnToLaunchUseCase: ReturnToLaunchUseCaseContract,
+    private val sendManualControl: SendManualControlUseCaseContract,
+    private val observeBleControllerState: ObserveBleControllerStateUseCaseContract
 ) : ViewModel(), DroneControllerViewModelContract {
 
     private val _uiState = MutableStateFlow(DroneControllerUiState())
     override val uiState: StateFlow<DroneControllerUiState> = _uiState.asStateFlow()
 
+    private val _virtualJoystick = MutableStateFlow(BleControllerState())
     private var observingJob: Job? = null
 
     override fun startObserving(address: String, port: Int) {
         observingJob?.cancel()
         observingJob = viewModelScope.launch {
-            observeDroneState(address, port).collect { state ->
-                _uiState.update {
-                    it.copy(
-                        altitudeMeters = state.altitudeMeters,
-                        batteryPercent = state.batteryPercent,
-                        speedKmh = state.speedKmh,
-                        satelliteCount = state.satelliteCount,
-                        connectionStatus = state.connectionStatus,
-                        isArmed = state.isArmed,
-                        latitude = state.latitude,
-                        longitude = state.longitude,
-                        bearing = state.bearing
-                    )
+            // ドローン状態の観測
+            launch {
+                observeDroneState(address, port).collect { state ->
+                    _uiState.update {
+                        it.copy(
+                            altitudeMeters = state.altitudeMeters,
+                            batteryPercent = state.batteryPercent,
+                            speedKmh = state.speedKmh,
+                            satelliteCount = state.satelliteCount,
+                            connectionStatus = state.connectionStatus,
+                            isArmed = state.isArmed,
+                            latitude = state.latitude,
+                            longitude = state.longitude,
+                            bearing = state.bearing
+                        )
+                    }
+                }
+            }
+            // BLEコントローラー状態の観測
+            launch {
+                observeBleControllerState().collect { bleState ->
+                    _uiState.update { it.copy(bleControllerState = bleState) }
+                }
+            }
+            // 手動制御ループ（10Hz）: BLE接続時は物理コントローラー優先
+            launch {
+                while (true) {
+                    val state = _uiState.value
+                    if (state.connectionStatus is ConnectionStatus.Connected) {
+                        val input = if (state.bleConnectionStatus is BleConnectionStatus.Connected) {
+                            state.bleControllerState
+                        } else {
+                            _virtualJoystick.value
+                        }
+                        sendManualControl(
+                            pitch = -input.rightY,
+                            roll = input.rightX,
+                            throttle = input.leftY,
+                            yaw = input.leftX
+                        )
+                    }
+                    delay(100L)
                 }
             }
         }
@@ -50,6 +89,12 @@ class DroneControllerViewModel(
     override fun stopObserving() {
         observingJob?.cancel()
         observingJob = null
+    }
+
+    override fun updateJoystickInput(leftX: Float, leftY: Float, rightX: Float, rightY: Float) {
+        _virtualJoystick.update {
+            it.copy(leftX = leftX, leftY = leftY, rightX = rightX, rightY = rightY)
+        }
     }
 
     override fun takeoff(altitude: Float) {

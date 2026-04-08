@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.Battery6Bar
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Satellite
@@ -45,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.io.dronecontroller.domain.model.BleConnectionStatus
 import com.io.dronecontroller.domain.model.RunStatus
 
 // ============================================================
@@ -79,12 +82,20 @@ fun StatusChips(
     modifier: Modifier = Modifier,
     batteryPercent: Int = 0,
     satelliteCount: Int = 0,
-    isConnected: Boolean = false
+    isConnected: Boolean = false,
+    bleConnectionStatus: BleConnectionStatus = BleConnectionStatus.Disconnected
 ) {
     val batteryTint = when {
         batteryPercent >= 50 -> GreenAccent
         batteryPercent >= 20 -> OrangeAccent
         else -> RedAccent
+    }
+    val isBleConnected = bleConnectionStatus is BleConnectionStatus.Connected
+    val bleLabel = when (bleConnectionStatus) {
+        is BleConnectionStatus.Connected -> bleConnectionStatus.device.name.take(8)
+        is BleConnectionStatus.Connecting -> "接続中..."
+        is BleConnectionStatus.Scanning -> "スキャン中"
+        else -> "BLE"
     }
     Column(
         modifier = modifier,
@@ -104,6 +115,11 @@ fun StatusChips(
             icon = Icons.Default.Satellite,
             label = "$satelliteCount",
             iconTint = BlueAccent
+        )
+        StatusChip(
+            icon = if (isBleConnected) Icons.Default.BluetoothConnected else Icons.Default.Bluetooth,
+            label = if (isBleConnected) bleLabel else "--",
+            iconTint = if (isBleConnected) GreenAccent else Color.Gray
         )
     }
 }
@@ -216,7 +232,9 @@ private fun FlightInfoChip(
 fun TopRightActionButtons(
     modifier: Modifier = Modifier,
     isMapMode: Boolean = false,
-    onToggleMap: () -> Unit = {}
+    isBleConnected: Boolean = false,
+    onToggleMap: () -> Unit = {},
+    onOpenBleSettings: () -> Unit = {}
 ) {
     Column(
         modifier = modifier,
@@ -224,8 +242,10 @@ fun TopRightActionButtons(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ActionCircleButton(
-            icon = Icons.Default.Settings,
-            contentDescription = "設定"
+            icon = if (isBleConnected) Icons.Default.BluetoothConnected else Icons.Default.Settings,
+            contentDescription = "BLE設定",
+            tint = if (isBleConnected) GreenAccent else Color.White,
+            onClick = onOpenBleSettings
         )
         ActionCircleButton(
             icon = Icons.Default.Home,

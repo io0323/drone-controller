@@ -10,4 +10,5 @@ interface DroneControllerViewModelContract {
     fun land()
     fun returnToLaunch()
     fun toggleMapMode()
+    fun updateJoystickInput(leftX: Float, leftY: Float, rightX: Float, rightY: Float)
 }
