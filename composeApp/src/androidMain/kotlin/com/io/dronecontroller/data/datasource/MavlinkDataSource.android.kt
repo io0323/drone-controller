@@ -7,9 +7,16 @@ import io.mavsdk.System as MavsdkSystem
 import kotlin.math.sqrt
 import kotlin.coroutines.resume
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.suspendCancellableCoroutine
+
+private const val RECONNECT_DELAY_MS = 5_000L
+private const val MAX_RETRY_COUNT = 3
 
 class MavlinkDataSource(
     private val droneProvider: DroneProvider
@@ -21,9 +28,7 @@ class MavlinkDataSource(
         val disposable = system.core.connectionState.subscribe(
             { state ->
                 val status = if (state.isConnected == true) {
-                    ConnectionStatus.Connected(
-                        lastHeartbeatAt = System.currentTimeMillis()
-                    )
+                    ConnectionStatus.Connected(lastHeartbeatAt = System.currentTimeMillis())
                 } else {
                     ConnectionStatus.Disconnected
                 }
@@ -42,7 +47,15 @@ class MavlinkDataSource(
         }
     }
 
-    override fun observeDroneState(address: String, port: Int): Flow<DroneState> = callbackFlow {
+    override fun observeDroneState(address: String, port: Int): Flow<DroneState> = flow {
+        emitAll(observeDroneStateInternal(address, port))
+    }.retryWhen { _, _ ->
+        // 接続断後に自動再接続（5秒待機）
+        delay(RECONNECT_DELAY_MS)
+        true
+    }
+
+    private fun observeDroneStateInternal(address: String, port: Int): Flow<DroneState> = callbackFlow {
         val system = MavsdkSystem(address, port).also { droneProvider.drone = it }
         var altitudeMeters = 0f
         var batteryPercent = 0
@@ -140,7 +153,22 @@ class MavlinkDataSource(
         droneProvider.drone = null
     }
 
-    override suspend fun takeoff(altitudeMeters: Float): RunStatus<Unit> {
+    override suspend fun takeoff(altitudeMeters: Float): RunStatus<Unit> =
+        withRetry { executeTakeoff(altitudeMeters) }
+
+    override suspend fun land(): RunStatus<Unit> =
+        withRetry { executeLand() }
+
+    override suspend fun returnToLaunch(): RunStatus<Unit> =
+        withRetry { executeReturnToLaunch() }
+
+    override fun sendManualControl(pitch: Float, roll: Float, throttle: Float, yaw: Float) {
+        // TODO: io.mavsdk バージョンに合わせて実装
+    }
+
+    // ─── プライベートヘルパー ─────────────────────────────────────
+
+    private suspend fun executeTakeoff(altitudeMeters: Float): RunStatus<Unit> {
         val system = droneProvider.drone ?: return RunStatus.Error("未接続")
         return suspendCancellableCoroutine { cont ->
             val disposable = system.action.takeoff().subscribe(
@@ -151,7 +179,7 @@ class MavlinkDataSource(
         }
     }
 
-    override suspend fun land(): RunStatus<Unit> {
+    private suspend fun executeLand(): RunStatus<Unit> {
         val system = droneProvider.drone ?: return RunStatus.Error("未接続")
         return suspendCancellableCoroutine { cont ->
             val disposable = system.action.land().subscribe(
@@ -162,7 +190,7 @@ class MavlinkDataSource(
         }
     }
 
-    override suspend fun returnToLaunch(): RunStatus<Unit> {
+    private suspend fun executeReturnToLaunch(): RunStatus<Unit> {
         val system = droneProvider.drone ?: return RunStatus.Error("未接続")
         return suspendCancellableCoroutine { cont ->
             val disposable = system.action.returnToLaunch().subscribe(
@@ -173,9 +201,15 @@ class MavlinkDataSource(
         }
     }
 
-    override fun sendManualControl(pitch: Float, roll: Float, throttle: Float, yaw: Float) {
-        // TODO: io.mavsdk バージョンに合わせて実装
-        // MAVSDK ManualControl plugin の API シグネチャを確認後に有効化:
-        // system.manualControl.setManualControl(roll, pitch, throttle, yaw, 0).subscribe({}, {})
+    /**
+     * 最大 [MAX_RETRY_COUNT] 回リトライするラッパー。
+     * 成功したら即返す。最終試行の結果をそのまま返す。
+     */
+    private suspend fun <T> withRetry(block: suspend () -> RunStatus<T>): RunStatus<T> {
+        repeat(MAX_RETRY_COUNT - 1) {
+            val result = block()
+            if (result is RunStatus.Success) return result
+        }
+        return block()
     }
 }
