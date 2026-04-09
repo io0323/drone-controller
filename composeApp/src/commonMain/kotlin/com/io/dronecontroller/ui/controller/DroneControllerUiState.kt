@@ -18,7 +18,8 @@ data class DroneControllerUiState(
     val bearing: Float = 0f,
     val isMapMode: Boolean = false,
     val bleConnectionStatus: BleConnectionStatus = BleConnectionStatus.Disconnected,
-    val bleControllerState: BleControllerState = BleControllerState()
+    val bleControllerState: BleControllerState = BleControllerState(),
+    val errorMessage: String? = null
 ) {
     val connectedControllerName: String?
         get() = (bleConnectionStatus as? BleConnectionStatus.Connected)?.device?.name

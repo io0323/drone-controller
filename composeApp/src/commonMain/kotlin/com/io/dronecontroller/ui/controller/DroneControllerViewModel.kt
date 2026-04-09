@@ -13,6 +13,7 @@ import com.io.dronecontroller.domain.usecase.ObserveDroneStateUseCaseContract
 import com.io.dronecontroller.domain.usecase.ReturnToLaunchUseCaseContract
 import com.io.dronecontroller.domain.usecase.SendManualControlUseCaseContract
 import com.io.dronecontroller.domain.usecase.TakeoffUseCaseContract
+import com.io.dronecontroller.service.DroneStateHolder
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +28,8 @@ class DroneControllerViewModel(
     private val landUseCase: LandUseCaseContract,
     private val returnToLaunchUseCase: ReturnToLaunchUseCaseContract,
     private val sendManualControl: SendManualControlUseCaseContract,
-    private val observeBleControllerState: ObserveBleControllerStateUseCaseContract
+    private val observeBleControllerState: ObserveBleControllerStateUseCaseContract,
+    private val droneStateHolder: DroneStateHolder
 ) : ViewModel(), DroneControllerViewModelContract {
 
     private val _uiState = MutableStateFlow(DroneControllerUiState())
@@ -55,6 +57,11 @@ class DroneControllerViewModel(
                             bearing = state.bearing
                         )
                     }
+                    // Foreground Service の通知状態を更新
+                    droneStateHolder.update(
+                        batteryPercent = state.batteryPercent,
+                        isConnected = state.connectionStatus is ConnectionStatus.Connected
+                    )
                 }
             }
             // BLEコントローラー状態の観測
@@ -99,29 +106,48 @@ class DroneControllerViewModel(
 
     override fun takeoff(altitude: Float) {
         viewModelScope.launch {
-            _uiState.update { it.copy(commandStatus = RunStatus.Loading) }
+            _uiState.update { it.copy(commandStatus = RunStatus.Loading, errorMessage = null) }
             val result = takeoffUseCase(altitude)
-            _uiState.update { it.copy(commandStatus = result) }
+            _uiState.update {
+                it.copy(
+                    commandStatus = result,
+                    errorMessage = (result as? RunStatus.Error)?.message
+                )
+            }
         }
     }
 
     override fun land() {
         viewModelScope.launch {
-            _uiState.update { it.copy(commandStatus = RunStatus.Loading) }
+            _uiState.update { it.copy(commandStatus = RunStatus.Loading, errorMessage = null) }
             val result = landUseCase()
-            _uiState.update { it.copy(commandStatus = result) }
+            _uiState.update {
+                it.copy(
+                    commandStatus = result,
+                    errorMessage = (result as? RunStatus.Error)?.message
+                )
+            }
         }
     }
 
     override fun returnToLaunch() {
         viewModelScope.launch {
-            _uiState.update { it.copy(commandStatus = RunStatus.Loading) }
+            _uiState.update { it.copy(commandStatus = RunStatus.Loading, errorMessage = null) }
             val result = returnToLaunchUseCase()
-            _uiState.update { it.copy(commandStatus = result) }
+            _uiState.update {
+                it.copy(
+                    commandStatus = result,
+                    errorMessage = (result as? RunStatus.Error)?.message
+                )
+            }
         }
     }
 
     override fun toggleMapMode() {
         _uiState.update { it.copy(isMapMode = !it.isMapMode) }
+    }
+
+    override fun clearError() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 }

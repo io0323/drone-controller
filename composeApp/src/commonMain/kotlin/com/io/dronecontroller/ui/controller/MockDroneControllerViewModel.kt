@@ -42,4 +42,8 @@ class MockDroneControllerViewModel : DroneControllerViewModelContract {
     }
 
     override fun updateJoystickInput(leftX: Float, leftY: Float, rightX: Float, rightY: Float) = Unit
+
+    override fun clearError() {
+        _uiState.update { it.copy(errorMessage = null) }
+    }
 }

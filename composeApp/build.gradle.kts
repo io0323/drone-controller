@@ -36,6 +36,8 @@ kotlin {
             implementation(libs.mavsdk)
             implementation(libs.maps.compose)
             implementation(libs.play.services.maps)
+            // ドローンコントローラーUIで使用するアイコン群
+//            implementation("androidx.compose.material:material-icons-extended:1.7.3")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -49,11 +51,12 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
-            // ドローンコントローラーUIで使用するアイコン群
-            implementation("androidx.compose.material:material-icons-extended:1.7.3")
+            implementation(compose.materialIconsExtended)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.turbine)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
