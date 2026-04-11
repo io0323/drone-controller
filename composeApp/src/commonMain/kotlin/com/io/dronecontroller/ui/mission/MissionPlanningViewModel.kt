@@ -21,9 +21,9 @@ class MissionPlanningViewModel(
     private val startMissionUseCase: StartMissionUseCaseContract,
     private val stopMissionUseCase: StopMissionUseCaseContract,
     private val pauseMissionUseCase: PauseMissionUseCaseContract,
-    private val observeMissionProgress: ObserveMissionProgressUseCaseContract
-) : ViewModel(), MissionPlanningViewModelContract {
-
+    private val observeMissionProgress: ObserveMissionProgressUseCaseContract,
+) : ViewModel(),
+    MissionPlanningViewModelContract {
     private val _uiState = MutableStateFlow(MissionPlanningUiState())
     override val uiState: StateFlow<MissionPlanningUiState> = _uiState.asStateFlow()
 
@@ -36,17 +36,24 @@ class MissionPlanningViewModel(
         }
     }
 
-    override fun addWaypoint(latitudeDeg: Double, longitudeDeg: Double) {
-        val newItem = MissionItem(
-            latitudeDeg = latitudeDeg,
-            longitudeDeg = longitudeDeg,
-            altitudeMeters = 10f,
-            speedMS = 5f
-        )
+    override fun addWaypoint(
+        latitudeDeg: Double,
+        longitudeDeg: Double,
+    ) {
+        val newItem =
+            MissionItem(
+                latitudeDeg = latitudeDeg,
+                longitudeDeg = longitudeDeg,
+                altitudeMeters = 10f,
+                speedMS = 5f,
+            )
         _uiState.update { it.copy(waypoints = it.waypoints + newItem) }
     }
 
-    override fun updateWaypoint(index: Int, item: MissionItem) {
+    override fun updateWaypoint(
+        index: Int,
+        item: MissionItem,
+    ) {
         val updated = _uiState.value.waypoints.toMutableList()
         if (index in updated.indices) {
             updated[index] = item
@@ -75,7 +82,7 @@ class MissionPlanningViewModel(
                 it.copy(
                     commandStatus = result,
                     missionStatus = if (result is RunStatus.Success) MissionStatus.Idle else MissionStatus.Error,
-                    errorMessage = (result as? RunStatus.Error)?.message
+                    errorMessage = (result as? RunStatus.Error)?.message,
                 )
             }
         }
@@ -89,7 +96,7 @@ class MissionPlanningViewModel(
                 it.copy(
                     commandStatus = result,
                     missionStatus = if (result is RunStatus.Success) MissionStatus.Running else MissionStatus.Error,
-                    errorMessage = (result as? RunStatus.Error)?.message
+                    errorMessage = (result as? RunStatus.Error)?.message,
                 )
             }
         }
@@ -103,7 +110,7 @@ class MissionPlanningViewModel(
                 it.copy(
                     commandStatus = result,
                     missionStatus = if (result is RunStatus.Success) MissionStatus.Idle else MissionStatus.Error,
-                    errorMessage = (result as? RunStatus.Error)?.message
+                    errorMessage = (result as? RunStatus.Error)?.message,
                 )
             }
         }
@@ -117,7 +124,7 @@ class MissionPlanningViewModel(
                 it.copy(
                     commandStatus = result,
                     missionStatus = if (result is RunStatus.Success) MissionStatus.Paused else MissionStatus.Error,
-                    errorMessage = (result as? RunStatus.Error)?.message
+                    errorMessage = (result as? RunStatus.Error)?.message,
                 )
             }
         }

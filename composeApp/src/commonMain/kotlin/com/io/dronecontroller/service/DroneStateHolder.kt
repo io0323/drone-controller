@@ -12,7 +12,10 @@ class DroneStateHolder {
     private val _state = MutableStateFlow(DroneNotificationState())
     val state: StateFlow<DroneNotificationState> = _state.asStateFlow()
 
-    fun update(batteryPercent: Int, isConnected: Boolean) {
+    fun update(
+        batteryPercent: Int,
+        isConnected: Boolean,
+    ) {
         _state.value = DroneNotificationState(batteryPercent, isConnected)
     }
 }

@@ -17,13 +17,14 @@ actual fun MissionMapView(
     droneLat: Double,
     droneLng: Double,
     onMapClick: (lat: Double, lng: Double) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFF1B2228)),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(Color(0xFF1B2228)),
+        contentAlignment = Alignment.Center,
     ) {
         Text(text = "地図はAndroid版のみ対応", color = Color.White)
     }

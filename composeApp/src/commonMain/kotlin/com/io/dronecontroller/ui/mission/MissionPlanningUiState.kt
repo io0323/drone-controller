@@ -10,5 +10,5 @@ data class MissionPlanningUiState(
     val missionStatus: MissionStatus = MissionStatus.Idle,
     val progress: MissionProgress? = null,
     val commandStatus: RunStatus<Unit>? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )

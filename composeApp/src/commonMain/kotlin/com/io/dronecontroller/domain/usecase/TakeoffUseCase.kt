@@ -4,8 +4,7 @@ import com.io.dronecontroller.domain.model.RunStatus
 import com.io.dronecontroller.domain.repository.MavlinkRepositoryContract
 
 class TakeoffUseCase(
-    private val repository: MavlinkRepositoryContract
+    private val repository: MavlinkRepositoryContract,
 ) : TakeoffUseCaseContract {
-    override suspend operator fun invoke(altitudeMeters: Float): RunStatus<Unit> =
-        repository.takeoff(altitudeMeters)
+    override suspend operator fun invoke(altitudeMeters: Float): RunStatus<Unit> = repository.takeoff(altitudeMeters)
 }

@@ -7,8 +7,12 @@ import kotlinx.coroutines.flow.Flow
 
 interface MissionDataSourceContract {
     suspend fun uploadMission(items: List<MissionItem>): RunStatus<Unit>
+
     suspend fun startMission(): RunStatus<Unit>
+
     suspend fun stopMission(): RunStatus<Unit>
+
     suspend fun pauseMission(): RunStatus<Unit>
+
     fun observeMissionProgress(): Flow<MissionProgress>
 }
