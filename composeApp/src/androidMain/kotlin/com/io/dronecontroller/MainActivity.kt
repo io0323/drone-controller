@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat
 import com.io.dronecontroller.service.MavlinkForegroundService
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +38,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            App()
+            App(onStartService = {
+                ContextCompat.startForegroundService(
+                    this,
+                    Intent(this, MavlinkForegroundService::class.java),
+                )
+            })
         }
     }
 
@@ -69,3 +75,4 @@ class MainActivity : ComponentActivity() {
 fun AppAndroidPreview() {
     App()
 }
+

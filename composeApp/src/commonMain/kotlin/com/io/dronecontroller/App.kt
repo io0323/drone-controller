@@ -5,10 +5,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.io.dronecontroller.ui.connection.ConnectionScreen
 import com.io.dronecontroller.ui.controller.DroneControllerScreen
 import com.io.dronecontroller.ui.mission.MissionPlanningScreen
 
 private sealed class Screen {
+    data object Connection : Screen()
     data object Controller : Screen()
 
     data class MissionPlanning(
@@ -18,8 +20,8 @@ private sealed class Screen {
 }
 
 @Composable
-fun App() {
-    var screen by remember { mutableStateOf<Screen>(Screen.Controller) }
+fun App(onStartService: () -> Unit = {}) {
+    var screen by remember { mutableStateOf<Screen>(Screen.Connection) }
 
     when (val s = screen) {
         is Screen.Controller ->

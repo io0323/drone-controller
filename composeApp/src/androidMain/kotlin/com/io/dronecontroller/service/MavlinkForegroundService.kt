@@ -32,6 +32,7 @@ class MavlinkForegroundService : Service() {
         super.onCreate()
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         createNotificationChannel()
+        startForeground(NOTIFICATION_ID, buildNotification(DroneNotificationState()))
     }
 
     override fun onStartCommand(

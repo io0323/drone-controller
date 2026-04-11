@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -25,9 +26,19 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ConnectionScreen(viewModel: ConnectionViewModelContract = koinViewModel<ConnectionViewModel>()) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.status) {
+        if (uiState.status is ConnectionStatus.Connected) {
+            onConnected()
+        }
+    }
+
     ConnectionContent(
         uiState = uiState,
-        onConnect = viewModel::connect,
+        onConnect = {
+            onStartService()
+            viewModel.connect()
+        },
         onDisconnect = viewModel::disconnect,
         onAddressChange = viewModel::updateAddress,
         onPortChange = { viewModel.updatePort(it.toIntOrNull() ?: 50051) },
