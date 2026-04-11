@@ -26,10 +26,10 @@ class MavlinkForegroundService : Service() {
         super.onCreate()
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         createNotificationChannel()
+        startForeground(NOTIFICATION_ID, buildNotification(DroneNotificationState()))
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICATION_ID, buildNotification(DroneNotificationState()))
         scope.launch {
             droneStateHolder.state.collect { state ->
                 notificationManager.notify(NOTIFICATION_ID, buildNotification(state))

@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -24,15 +25,27 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ConnectionScreen(
-    viewModel: ConnectionViewModelContract = koinViewModel<ConnectionViewModel>()
+    onStartService: () -> Unit = {},
+    onConnected: () -> Unit = {},
+    viewModel: ConnectionViewModelContract = koinViewModel<ConnectionViewModel>(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.status) {
+        if (uiState.status is ConnectionStatus.Connected) {
+            onConnected()
+        }
+    }
+
     ConnectionContent(
         uiState = uiState,
-        onConnect = viewModel::connect,
+        onConnect = {
+            onStartService()
+            viewModel.connect()
+        },
         onDisconnect = viewModel::disconnect,
         onAddressChange = viewModel::updateAddress,
-        onPortChange = { viewModel.updatePort(it.toIntOrNull() ?: 50051) }
+        onPortChange = { viewModel.updatePort(it.toIntOrNull() ?: 50051) },
     )
 }
 
@@ -42,18 +55,18 @@ private fun ConnectionContent(
     onConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onAddressChange: (String) -> Unit,
-    onPortChange: (String) -> Unit
+    onPortChange: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = "ドローン接続",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -63,7 +76,7 @@ private fun ConnectionContent(
             onValueChange = onAddressChange,
             label = { Text("アドレス") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = uiState.status !is ConnectionStatus.Connected
+            enabled = uiState.status !is ConnectionStatus.Connected,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -73,7 +86,7 @@ private fun ConnectionContent(
             onValueChange = onPortChange,
             label = { Text("ポート") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = uiState.status !is ConnectionStatus.Connected
+            enabled = uiState.status !is ConnectionStatus.Connected,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -82,7 +95,7 @@ private fun ConnectionContent(
             Button(
                 onClick = onConnect,
                 enabled = uiState.status is ConnectionStatus.Disconnected ||
-                    uiState.status is ConnectionStatus.Error
+                    uiState.status is ConnectionStatus.Error,
             ) {
                 Text("接続")
             }
@@ -92,7 +105,7 @@ private fun ConnectionContent(
             Button(
                 onClick = onDisconnect,
                 enabled = uiState.status is ConnectionStatus.Connecting ||
-                    uiState.status is ConnectionStatus.Connected
+                    uiState.status is ConnectionStatus.Connected,
             ) {
                 Text("切断")
             }
@@ -115,7 +128,7 @@ private fun StatusDisplay(status: ConnectionStatus) {
     Text(
         text = label,
         style = MaterialTheme.typography.bodyLarge,
-        color = color
+        color = color,
     )
 }
 
@@ -125,12 +138,12 @@ private fun ConnectionScreenPreview() {
     MaterialTheme {
         ConnectionContent(
             uiState = ConnectionUiState(
-                status = ConnectionStatus.Connected(lastHeartbeatAt = 0L)
+                status = ConnectionStatus.Connected(lastHeartbeatAt = 0L),
             ),
             onConnect = {},
             onDisconnect = {},
             onAddressChange = {},
-            onPortChange = {}
+            onPortChange = {},
         )
     }
 }
