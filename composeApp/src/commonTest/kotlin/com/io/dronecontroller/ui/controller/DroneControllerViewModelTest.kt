@@ -111,7 +111,7 @@ class DroneControllerViewModelTest {
 
                 val error = awaitItem()
                 assertTrue(error.commandStatus is RunStatus.Error)
-                assertEquals("離陸失敗", (error.commandStatus as RunStatus.Error).message)
+                assertEquals("離陸コマンドが失敗しました", (error.commandStatus as RunStatus.Error).message)
 
                 cancelAndIgnoreRemainingEvents()
             }
