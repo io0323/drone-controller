@@ -6,6 +6,8 @@ import com.io.dronecontroller.domain.usecase.DisconnectBleDeviceUseCase
 import com.io.dronecontroller.domain.usecase.DisconnectBleDeviceUseCaseContract
 import com.io.dronecontroller.domain.usecase.LandUseCase
 import com.io.dronecontroller.domain.usecase.LandUseCaseContract
+import com.io.dronecontroller.domain.usecase.LoginUseCase
+import com.io.dronecontroller.domain.usecase.LoginUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveBleConnectionStatusUseCase
 import com.io.dronecontroller.domain.usecase.ObserveBleConnectionStatusUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveBleControllerStateUseCase
@@ -35,22 +37,22 @@ import com.io.dronecontroller.domain.usecase.UploadMissionUseCaseContract
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-val useCaseModule: Module =
-    module {
-        single<ObserveConnectionUseCaseContract> { ObserveConnectionUseCase(get()) }
-        single<ObserveDroneStateUseCaseContract> { ObserveDroneStateUseCase(get()) }
-        single<TakeoffUseCaseContract> { TakeoffUseCase(get()) }
-        single<LandUseCaseContract> { LandUseCase(get()) }
-        single<ReturnToLaunchUseCaseContract> { ReturnToLaunchUseCase(get()) }
-        single<SendManualControlUseCaseContract> { SendManualControlUseCase(get()) }
-        single<ScanBleDevicesUseCaseContract> { ScanBleDevicesUseCase(get()) }
-        single<ConnectBleDeviceUseCaseContract> { ConnectBleDeviceUseCase(get()) }
-        single<DisconnectBleDeviceUseCaseContract> { DisconnectBleDeviceUseCase(get()) }
-        single<ObserveBleConnectionStatusUseCaseContract> { ObserveBleConnectionStatusUseCase(get()) }
-        single<ObserveBleControllerStateUseCaseContract> { ObserveBleControllerStateUseCase(get()) }
-        single<UploadMissionUseCaseContract> { UploadMissionUseCase(get()) }
-        single<StartMissionUseCaseContract> { StartMissionUseCase(get()) }
-        single<StopMissionUseCaseContract> { StopMissionUseCase(get()) }
-        single<PauseMissionUseCaseContract> { PauseMissionUseCase(get()) }
-        single<ObserveMissionProgressUseCaseContract> { ObserveMissionProgressUseCase(get()) }
-    }
+val useCaseModule: Module = module {
+    single<LoginUseCaseContract> { LoginUseCase() }
+    single<ObserveConnectionUseCaseContract> { ObserveConnectionUseCase(get()) }
+    single<ObserveDroneStateUseCaseContract> { ObserveDroneStateUseCase(get()) }
+    single<TakeoffUseCaseContract> { TakeoffUseCase(get()) }
+    single<LandUseCaseContract> { LandUseCase(get()) }
+    single<ReturnToLaunchUseCaseContract> { ReturnToLaunchUseCase(get()) }
+    single<SendManualControlUseCaseContract> { SendManualControlUseCase(get()) }
+    single<ScanBleDevicesUseCaseContract> { ScanBleDevicesUseCase(get()) }
+    single<ConnectBleDeviceUseCaseContract> { ConnectBleDeviceUseCase(get()) }
+    single<DisconnectBleDeviceUseCaseContract> { DisconnectBleDeviceUseCase(get()) }
+    single<ObserveBleConnectionStatusUseCaseContract> { ObserveBleConnectionStatusUseCase(get()) }
+    single<ObserveBleControllerStateUseCaseContract> { ObserveBleControllerStateUseCase(get()) }
+    single<UploadMissionUseCaseContract> { UploadMissionUseCase(get()) }
+    single<StartMissionUseCaseContract> { StartMissionUseCase(get()) }
+    single<StopMissionUseCaseContract> { StopMissionUseCase(get()) }
+    single<PauseMissionUseCaseContract> { PauseMissionUseCase(get()) }
+    single<ObserveMissionProgressUseCaseContract> { ObserveMissionProgressUseCase(get()) }
+}
