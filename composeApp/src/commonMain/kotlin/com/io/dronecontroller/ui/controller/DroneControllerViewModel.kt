@@ -37,16 +37,44 @@ class DroneControllerViewModel(
     private val _virtualJoystick = MutableStateFlow(BleControllerState())
     private var observingJob: Job? = null
 
+    private var currentAddress: String = "10.0.2.2"
+    private var currentPort: Int = 50051
+    private var reconnectCount = 0
+    private var previousConnectionStatus: ConnectionStatus = ConnectionStatus.Disconnected
+
     override fun startObserving(
         address: String,
         port: Int,
     ) {
+        currentAddress = address
+        currentPort = port
+        reconnectCount = 0
+        startObservingInternal()
+    }
+
+    private fun startObservingInternal() {
         observingJob?.cancel()
+        previousConnectionStatus = ConnectionStatus.Disconnected
         observingJob =
             viewModelScope.launch {
-                // ドローン状態の観測
                 launch {
-                    observeDroneState(address, port).collect { state ->
+                    observeDroneState(currentAddress, currentPort).collect { state ->
+                        val wasConnected = previousConnectionStatus is ConnectionStatus.Connected
+                        val isDisconnected =
+                            state.connectionStatus is ConnectionStatus.Disconnected ||
+                                state.connectionStatus is ConnectionStatus.Error
+
+                        if (wasConnected && isDisconnected) {
+                            handleUnexpectedDisconnect()
+                            return@collect
+                        }
+
+                        if (state.connectionStatus is ConnectionStatus.Connected && reconnectCount > 0) {
+                            reconnectCount = 0
+                            _uiState.update { it.copy(isReconnecting = false) }
+                        }
+
+                        previousConnectionStatus = state.connectionStatus
                         _uiState.update {
                             it.copy(
                                 altitudeMeters = state.altitudeMeters,
@@ -60,20 +88,17 @@ class DroneControllerViewModel(
                                 bearing = state.bearing,
                             )
                         }
-                        // Foreground Service の通知状態を更新
                         droneStateHolder.update(
                             batteryPercent = state.batteryPercent,
                             isConnected = state.connectionStatus is ConnectionStatus.Connected,
                         )
                     }
                 }
-                // BLEコントローラー状態の観測
                 launch {
                     observeBleControllerState().collect { bleState ->
                         _uiState.update { it.copy(bleControllerState = bleState) }
                     }
                 }
-                // 手動制御ループ（10Hz）: BLE接続時は物理コントローラー優先
                 launch {
                     while (true) {
                         val state = _uiState.value
@@ -97,6 +122,37 @@ class DroneControllerViewModel(
             }
     }
 
+    private fun handleUnexpectedDisconnect() {
+        if (reconnectCount >= 3) {
+            _uiState.update {
+                it.copy(isReconnecting = false, errorMessage = "接続が切断されました。再接続に失敗しました")
+            }
+            return
+        }
+        reconnectCount++
+        _uiState.update {
+            it.copy(isReconnecting = true, errorMessage = "接続断。再接続中… ($reconnectCount/3)")
+        }
+        viewModelScope.launch {
+            observingJob?.cancel()
+            delay(5000L)
+            startObservingInternal()
+        }
+    }
+
+    private suspend fun executeWithRetry(
+        errorMessage: String,
+        action: suspend () -> RunStatus<Unit>,
+    ): RunStatus<Unit> {
+        var lastResult: RunStatus<Unit> = RunStatus.Error(errorMessage)
+        repeat(3) { attempt ->
+            lastResult = action()
+            if (lastResult is RunStatus.Success) return lastResult
+            if (attempt < 2) delay(1000L)
+        }
+        return RunStatus.Error(errorMessage)
+    }
+
     override fun stopObserving() {
         observingJob?.cancel()
         observingJob = null
@@ -116,7 +172,7 @@ class DroneControllerViewModel(
     override fun takeoff(altitude: Float) {
         viewModelScope.launch {
             _uiState.update { it.copy(commandStatus = RunStatus.Loading, errorMessage = null) }
-            val result = takeoffUseCase(altitude)
+            val result = executeWithRetry("離陸コマンドが失敗しました") { takeoffUseCase(altitude) }
             _uiState.update {
                 it.copy(
                     commandStatus = result,
@@ -129,7 +185,7 @@ class DroneControllerViewModel(
     override fun land() {
         viewModelScope.launch {
             _uiState.update { it.copy(commandStatus = RunStatus.Loading, errorMessage = null) }
-            val result = landUseCase()
+            val result = executeWithRetry("着陸コマンドが失敗しました") { landUseCase() }
             _uiState.update {
                 it.copy(
                     commandStatus = result,
@@ -142,7 +198,7 @@ class DroneControllerViewModel(
     override fun returnToLaunch() {
         viewModelScope.launch {
             _uiState.update { it.copy(commandStatus = RunStatus.Loading, errorMessage = null) }
-            val result = returnToLaunchUseCase()
+            val result = executeWithRetry("帰還コマンドが失敗しました") { returnToLaunchUseCase() }
             _uiState.update {
                 it.copy(
                     commandStatus = result,

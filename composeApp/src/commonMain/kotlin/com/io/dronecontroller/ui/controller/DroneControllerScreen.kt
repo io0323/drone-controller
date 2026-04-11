@@ -94,6 +94,7 @@ fun DroneControllerScreen(
             batteryPercent = uiState.batteryPercent,
             satelliteCount = uiState.satelliteCount,
             isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
+            isReconnecting = uiState.isReconnecting,
             bleConnectionStatus = uiState.bleConnectionStatus,
         )
 
