@@ -19,5 +19,5 @@ expect fun MissionMapView(
     droneLat: Double,
     droneLng: Double,
     onMapClick: (lat: Double, lng: Double) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 )

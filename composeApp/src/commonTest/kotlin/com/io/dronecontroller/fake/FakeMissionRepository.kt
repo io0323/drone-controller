@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 class FakeMissionRepository : MissionRepositoryContract {
-
     var uploadResult: RunStatus<Unit> = RunStatus.Success(Unit)
     var startResult: RunStatus<Unit> = RunStatus.Success(Unit)
     var stopResult: RunStatus<Unit> = RunStatus.Success(Unit)

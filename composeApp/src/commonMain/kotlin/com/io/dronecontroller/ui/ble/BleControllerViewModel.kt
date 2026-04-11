@@ -18,9 +18,9 @@ class BleControllerViewModel(
     private val scanBleDevices: ScanBleDevicesUseCaseContract,
     private val connectBleDevice: ConnectBleDeviceUseCaseContract,
     private val disconnectBleDevice: DisconnectBleDeviceUseCaseContract,
-    private val observeBleConnectionStatus: ObserveBleConnectionStatusUseCaseContract
-) : ViewModel(), BleControllerViewModelContract {
-
+    private val observeBleConnectionStatus: ObserveBleConnectionStatusUseCaseContract,
+) : ViewModel(),
+    BleControllerViewModelContract {
     private val _uiState = MutableStateFlow(BleControllerUiState())
     override val uiState: StateFlow<BleControllerUiState> = _uiState.asStateFlow()
 
@@ -32,7 +32,7 @@ class BleControllerViewModel(
                 _uiState.update {
                     it.copy(
                         connectionStatus = status,
-                        isScanning = status is BleConnectionStatus.Scanning
+                        isScanning = status is BleConnectionStatus.Scanning,
                     )
                 }
             }
@@ -41,12 +41,13 @@ class BleControllerViewModel(
 
     override fun startScan() {
         scanJob?.cancel()
-        scanJob = viewModelScope.launch {
-            _uiState.update { it.copy(scannedDevices = emptyList(), errorMessage = null) }
-            scanBleDevices().collect { devices ->
-                _uiState.update { it.copy(scannedDevices = devices) }
+        scanJob =
+            viewModelScope.launch {
+                _uiState.update { it.copy(scannedDevices = emptyList(), errorMessage = null) }
+                scanBleDevices().collect { devices ->
+                    _uiState.update { it.copy(scannedDevices = devices) }
+                }
             }
-        }
     }
 
     override fun stopScan() {

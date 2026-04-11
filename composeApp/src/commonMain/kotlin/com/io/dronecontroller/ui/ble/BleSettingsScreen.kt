@@ -49,38 +49,40 @@ private val DividerColor = Color(0xFF2A2A2A)
 @Composable
 fun BleSettingsScreen(
     viewModel: BleControllerViewModelContract = koinViewModel<BleControllerViewModel>(),
-    onDismiss: () -> Unit = {}
+    onDismiss: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     // 背景タップで閉じる
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0x88000000))
-            .clickable(onClick = onDismiss)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color(0x88000000))
+                .clickable(onClick = onDismiss),
     ) {
         Surface(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .clickable(enabled = false, onClick = {}) // 内部クリックは伝播させない
-                .padding(horizontal = 0.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .clickable(enabled = false, onClick = {}) // 内部クリックは伝播させない
+                    .padding(horizontal = 0.dp),
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            color = PanelBg
+            color = PanelBg,
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 // ヘッダー
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "BLEコントローラー設定",
                         color = Color.White,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(Icons.Default.Close, contentDescription = "閉じる", tint = Color.White)
@@ -99,7 +101,7 @@ fun BleSettingsScreen(
                         text = msg,
                         color = Color(0xFFFC6868),
                         fontSize = 12.sp,
-                        modifier = Modifier.padding(horizontal = 4.dp)
+                        modifier = Modifier.padding(horizontal = 4.dp),
                     )
                 }
 
@@ -111,41 +113,46 @@ fun BleSettingsScreen(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = if (uiState.isScanning) "スキャン中..." else "近くのデバイスを検索",
                         color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 13.sp
+                        fontSize = 13.sp,
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (uiState.isScanning) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 color = BlueAccent,
-                                strokeWidth = 2.dp
+                                strokeWidth = 2.dp,
                             )
                         }
                         if (uiState.connectionStatus is BleConnectionStatus.Connected) {
                             Button(
                                 onClick = { viewModel.disconnect() },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFFC6868).copy(alpha = 0.8f)
-                                )
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFFC6868).copy(alpha = 0.8f),
+                                    ),
                             ) { Text("切断", fontSize = 12.sp) }
                         } else {
                             Button(
                                 onClick = {
-                                    if (uiState.isScanning) viewModel.stopScan()
-                                    else viewModel.startScan()
+                                    if (uiState.isScanning) {
+                                        viewModel.stopScan()
+                                    } else {
+                                        viewModel.startScan()
+                                    }
                                 },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = BlueAccent.copy(alpha = 0.85f)
-                                )
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = BlueAccent.copy(alpha = 0.85f),
+                                    ),
                             ) {
                                 Text(
                                     text = if (uiState.isScanning) "停止" else "スキャン",
-                                    fontSize = 12.sp
+                                    fontSize = 12.sp,
                                 )
                             }
                         }
@@ -156,17 +163,20 @@ fun BleSettingsScreen(
                 if (uiState.scannedDevices.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         items(uiState.scannedDevices) { device ->
                             DeviceRow(
                                 device = device,
-                                isConnected = (uiState.connectionStatus as? BleConnectionStatus.Connected)
-                                    ?.device?.address == device.address,
-                                onConnect = { viewModel.connect(device.address) }
+                                isConnected =
+                                    (uiState.connectionStatus as? BleConnectionStatus.Connected)
+                                        ?.device
+                                        ?.address == device.address,
+                                onConnect = { viewModel.connect(device.address) },
                             )
                         }
                     }
@@ -180,22 +190,23 @@ fun BleSettingsScreen(
 
 @Composable
 private fun ConnectionStatusRow(status: BleConnectionStatus) {
-    val (icon, label, tint) = when (status) {
-        is BleConnectionStatus.Connected ->
-            Triple(Icons.Default.BluetoothConnected, "接続済み: ${status.device.name}", GreenAccent)
-        is BleConnectionStatus.Connecting ->
-            Triple(Icons.Default.Bluetooth, "接続中: ${status.device.name}", BlueAccent)
-        is BleConnectionStatus.Scanning ->
-            Triple(Icons.Default.Bluetooth, "スキャン中", BlueAccent)
-        is BleConnectionStatus.Error ->
-            Triple(Icons.Default.BluetoothDisabled, "エラー: ${status.message}", Color(0xFFFC6868))
-        BleConnectionStatus.Disconnected ->
-            Triple(Icons.Default.BluetoothDisabled, "未接続", Color.Gray)
-    }
+    val (icon, label, tint) =
+        when (status) {
+            is BleConnectionStatus.Connected ->
+                Triple(Icons.Default.BluetoothConnected, "接続済み: ${status.device.name}", GreenAccent)
+            is BleConnectionStatus.Connecting ->
+                Triple(Icons.Default.Bluetooth, "接続中: ${status.device.name}", BlueAccent)
+            is BleConnectionStatus.Scanning ->
+                Triple(Icons.Default.Bluetooth, "スキャン中", BlueAccent)
+            is BleConnectionStatus.Error ->
+                Triple(Icons.Default.BluetoothDisabled, "エラー: ${status.message}", Color(0xFFFC6868))
+            BleConnectionStatus.Disconnected ->
+                Triple(Icons.Default.BluetoothDisabled, "未接続", Color.Gray)
+        }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(18.dp))
         Text(text = label, color = tint, fontSize = 13.sp, fontWeight = FontWeight.Medium)
@@ -206,39 +217,41 @@ private fun ConnectionStatusRow(status: BleConnectionStatus) {
 private fun DeviceRow(
     device: BleDevice,
     isConnected: Boolean,
-    onConnect: () -> Unit
+    onConnect: () -> Unit,
 ) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = if (isConnected) GreenAccent.copy(alpha = 0.12f) else Color(0xFF1E1E1E)
+        color = if (isConnected) GreenAccent.copy(alpha = 0.12f) else Color(0xFF1E1E1E),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
                 Text(
                     text = device.name,
                     color = Color.White,
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
                 Text(
                     text = device.address,
                     color = Color.White.copy(alpha = 0.4f),
-                    fontSize = 10.sp
+                    fontSize = 10.sp,
                 )
             }
             if (!isConnected) {
                 Button(
                     onClick = onConnect,
                     modifier = Modifier.height(30.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = BlueAccent.copy(alpha = 0.8f)
-                    )
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = BlueAccent.copy(alpha = 0.8f),
+                        ),
                 ) {
                     Text("接続", fontSize = 11.sp)
                 }
@@ -247,7 +260,7 @@ private fun DeviceRow(
                     Icons.Default.BluetoothConnected,
                     contentDescription = "接続済み",
                     tint = GreenAccent,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
@@ -261,7 +274,7 @@ private fun DeviceRow(
 @androidx.compose.ui.tooling.preview.Preview(
     showBackground = true,
     widthDp = 390,
-    heightDp = 844
+    heightDp = 844,
 )
 @Composable
 private fun BleSettingsScreenPreview() {

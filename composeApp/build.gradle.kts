@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.ktlint)
 }
 
 kotlin {
@@ -15,7 +16,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -25,9 +26,9 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     jvm()
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
@@ -51,7 +52,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
-            implementation(compose.materialIconsExtended)
+            implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -67,22 +68,35 @@ kotlin {
 
 android {
     namespace = "com.io.dronecontroller"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk =
+        libs.versions.android.compileSdk
+            .get()
+            .toInt()
 
     defaultConfig {
         applicationId = "com.io.dronecontroller"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        minSdk =
+            libs.versions.android.minSdk
+                .get()
+                .toInt()
+        targetSdk =
+            libs.versions.android.targetSdk
+                .get()
+                .toInt()
         versionCode = 1
         versionName = "1.0"
 
         val localPropsFile = rootProject.file("local.properties")
-        val mapsApiKey = if (localPropsFile.exists()) {
-            localPropsFile.readLines()
-                .firstOrNull { it.startsWith("MAPS_API_KEY=") }
-                ?.removePrefix("MAPS_API_KEY=")
-                ?.trim() ?: ""
-        } else ""
+        val mapsApiKey =
+            if (localPropsFile.exists()) {
+                localPropsFile
+                    .readLines()
+                    .firstOrNull { it.startsWith("MAPS_API_KEY=") }
+                    ?.removePrefix("MAPS_API_KEY=")
+                    ?.trim() ?: ""
+            } else {
+                ""
+            }
         manifestPlaceholders["mapsApiKey"] = mapsApiKey
     }
     packaging {
@@ -103,6 +117,24 @@ android {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
+}
+
+ktlint {
+    filter {
+        exclude { element ->
+            element.file.absolutePath.contains("/build/")
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask>().configureEach {
+        exclude(
+            org.gradle.api.specs.Spec { element ->
+                element.file.absolutePath.contains("/build/")
+            },
+        )
+    }
 }
 
 compose.desktop {

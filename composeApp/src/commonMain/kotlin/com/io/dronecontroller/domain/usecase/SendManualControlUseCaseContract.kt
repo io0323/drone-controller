@@ -9,5 +9,10 @@ interface SendManualControlUseCaseContract {
      * @param throttle スロットル: -1.0=最低出力 / +1.0=最高出力
      * @param yaw      ヨー（回転）: -1.0=左回転 / +1.0=右回転
      */
-    operator fun invoke(pitch: Float, roll: Float, throttle: Float, yaw: Float)
+    operator fun invoke(
+        pitch: Float,
+        roll: Float,
+        throttle: Float,
+        yaw: Float,
+    )
 }

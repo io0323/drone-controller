@@ -10,11 +10,12 @@ import com.io.dronecontroller.service.DroneStateHolder
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-val repositoryModule: Module = module {
-    single<MavlinkRepositoryContract> { MavlinkRepository(get()) }
-    single<BleRepositoryContract> { BleRepository(get()) }
-    single<MissionRepositoryContract> { MissionRepository(get()) }
-    single { DroneStateHolder() }
-}
+val repositoryModule: Module =
+    module {
+        single<MavlinkRepositoryContract> { MavlinkRepository(get()) }
+        single<BleRepositoryContract> { BleRepository(get()) }
+        single<MissionRepositoryContract> { MissionRepository(get()) }
+        single { DroneStateHolder() }
+    }
 
 expect val dataSourceModule: Module

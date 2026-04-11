@@ -7,22 +7,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 
 class MockDroneControllerViewModel : DroneControllerViewModelContract {
-    private val _uiState = MutableStateFlow(
-        DroneControllerUiState(
-            altitudeMeters = 25.3f,
-            batteryPercent = 87,
-            speedKmh = 12.5f,
-            satelliteCount = 12,
-            connectionStatus = ConnectionStatus.Connected(lastHeartbeatAt = 0L),
-            isArmed = true,
-            latitude = 35.6762,
-            longitude = 139.6503,
-            bearing = 45f
+    private val _uiState =
+        MutableStateFlow(
+            DroneControllerUiState(
+                altitudeMeters = 25.3f,
+                batteryPercent = 87,
+                speedKmh = 12.5f,
+                satelliteCount = 12,
+                connectionStatus = ConnectionStatus.Connected(lastHeartbeatAt = 0L),
+                isArmed = true,
+                latitude = 35.6762,
+                longitude = 139.6503,
+                bearing = 45f,
+            ),
         )
-    )
     override val uiState: StateFlow<DroneControllerUiState> = _uiState
 
-    override fun startObserving(address: String, port: Int) = Unit
+    override fun startObserving(
+        address: String,
+        port: Int,
+    ) = Unit
+
     override fun stopObserving() = Unit
 
     override fun takeoff(altitude: Float) {
@@ -41,7 +46,12 @@ class MockDroneControllerViewModel : DroneControllerViewModelContract {
         _uiState.update { it.copy(isMapMode = !it.isMapMode) }
     }
 
-    override fun updateJoystickInput(leftX: Float, leftY: Float, rightX: Float, rightY: Float) = Unit
+    override fun updateJoystickInput(
+        leftX: Float,
+        leftY: Float,
+        rightX: Float,
+        rightY: Float,
+    ) = Unit
 
     override fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }

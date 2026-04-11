@@ -11,9 +11,10 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-actual val dataSourceModule: Module = module {
-    single { DroneProvider() }
-    single<MavlinkDataSourceContract> { MavlinkDataSource(get()) }
-    single<MissionDataSourceContract> { MissionDataSource(get()) }
-    single<BleDataSourceContract> { BleDataSource(androidContext()) }
-}
+actual val dataSourceModule: Module =
+    module {
+        single { DroneProvider() }
+        single<MavlinkDataSourceContract> { MavlinkDataSource(get()) }
+        single<MissionDataSourceContract> { MissionDataSource(get()) }
+        single<BleDataSourceContract> { BleDataSource(androidContext()) }
+    }

@@ -42,6 +42,15 @@ iosMain
 - **パターン1（expect/actual）**: androidMain / iosMain に Kotlin 実装
 - **パターン2（Contract + Swift）**: commonMain で Contract 定義 → androidMain に Kotlin 実装 → `iosApp/` に Swift 実装
 
+## 実装優先順
+1. MAVLink接続・HEARTBEAT受信 ✅
+2. メインUI（コントローラー画面）
+3. テレメトリ表示（高度・バッテリー・姿勢）
+4. 基本コマンド（離陸・着陸・RTL）
+5. BLE物理コントローラー連携
+6. 地図表示
+7. ミッション計画
+
 ## 注意事項
 - MAVLink接続はForeground Serviceで維持（Android）
 - iOS固有処理は将来対応

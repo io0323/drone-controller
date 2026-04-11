@@ -7,5 +7,5 @@ data class BleControllerUiState(
     val connectionStatus: BleConnectionStatus = BleConnectionStatus.Disconnected,
     val scannedDevices: List<BleDevice> = emptyList(),
     val isScanning: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )

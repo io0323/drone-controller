@@ -13,5 +13,5 @@ data class BleControllerState(
     val leftX: Float = 0f,
     val leftY: Float = 0f,
     val rightX: Float = 0f,
-    val rightY: Float = 0f
+    val rightY: Float = 0f,
 )

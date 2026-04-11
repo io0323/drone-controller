@@ -12,7 +12,11 @@ import com.io.dronecontroller.ui.mission.MissionPlanningScreen
 private sealed class Screen {
     data object Connection : Screen()
     data object Controller : Screen()
-    data class MissionPlanning(val droneLat: Double, val droneLng: Double) : Screen()
+
+    data class MissionPlanning(
+        val droneLat: Double,
+        val droneLng: Double,
+    ) : Screen()
 }
 
 @Composable
@@ -20,11 +24,6 @@ fun App(onStartService: () -> Unit = {}) {
     var screen by remember { mutableStateOf<Screen>(Screen.Connection) }
 
     when (val s = screen) {
-        is Screen.Connection ->
-            ConnectionScreen(
-                onStartService = onStartService,
-                onConnected = { screen = Screen.Controller },
-            )
         is Screen.Controller ->
             DroneControllerScreen(
                 onNavigateToMission = { lat, lng -> screen = Screen.MissionPlanning(lat, lng) },

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,7 +44,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun DroneControllerScreen(
     onNavigateToMission: (lat: Double, lng: Double) -> Unit = { _, _ -> },
-    viewModel: DroneControllerViewModelContract = koinViewModel<DroneControllerViewModel>()
+    viewModel: DroneControllerViewModelContract = koinViewModel<DroneControllerViewModel>(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -73,14 +72,13 @@ fun DroneControllerScreen(
     val isBleConnected = uiState.bleConnectionStatus is BleConnectionStatus.Connected
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         // ─── 背景（地図 or カメラ映像風） ──────────────────────────
         if (uiState.isMapMode) {
             DroneMapView(
                 latitude = uiState.latitude,
                 longitude = uiState.longitude,
                 bearing = uiState.bearing,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
         } else {
             CameraBackground()
@@ -89,101 +87,110 @@ fun DroneControllerScreen(
 
         // ─── 左上ステータス ───────────────────────────────────────
         StatusChips(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 12.dp, top = 14.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 12.dp, top = 14.dp),
             batteryPercent = uiState.batteryPercent,
             satelliteCount = uiState.satelliteCount,
             isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
-            bleConnectionStatus = uiState.bleConnectionStatus
+            isReconnecting = uiState.isReconnecting,
+            bleConnectionStatus = uiState.bleConnectionStatus,
         )
 
         // ─── 上中央フライト情報 ──────────────────────────────────
         FlightInfoPanel(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 14.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 14.dp),
             altitudeMeters = uiState.altitudeMeters,
-            speedKmh = uiState.speedKmh
+            speedKmh = uiState.speedKmh,
         )
 
         // ─── 右上アクションボタン ────────────────────────────────
         TopRightActionButtons(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(end = 12.dp, top = 14.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 12.dp, top = 14.dp),
             isMapMode = uiState.isMapMode,
             isBleConnected = isBleConnected,
             onToggleMap = { viewModel.toggleMapMode() },
             onOpenBleSettings = { showBleSettings = true },
-            onOpenMission = { onNavigateToMission(uiState.latitude, uiState.longitude) }
+            onOpenMission = { onNavigateToMission(uiState.latitude, uiState.longitude) },
         )
 
         // ─── 中央ターゲットマーカー ──────────────────────────────
         CenterTargetMarker(
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier.align(Alignment.Center),
         )
 
         // ─── 中央: コマンドボタン（離陸・着陸・RTL） ────────────
         CommandButtons(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(top = 80.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.Center)
+                    .padding(top = 80.dp),
             isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
             isArmed = uiState.isArmed,
             commandStatus = uiState.commandStatus,
             onTakeoff = { viewModel.takeoff() },
             onLand = { viewModel.land() },
-            onReturnToLaunch = { viewModel.returnToLaunch() }
+            onReturnToLaunch = { viewModel.returnToLaunch() },
         )
 
         // ─── 下中央カメラボタン（ジョイスティック値を反映） ───────
         CameraActionButtons(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 28.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 28.dp),
             leftX = leftJoystickX,
             leftY = leftJoystickY,
             rightX = rightJoystickX,
-            rightY = rightJoystickY
+            rightY = rightJoystickY,
         )
 
         // ─── 左下: 上昇/回転スティック（BLE接続時はグレーアウト） ──
         VirtualJoystick(
             label = if (isBleConnected) "上昇/回転 (BLE)" else "上昇/回転",
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 10.dp, bottom = 22.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 10.dp, bottom = 22.dp),
             onValueChanged = { x, y ->
                 leftJoystickX = x
                 leftJoystickY = y
                 if (!isBleConnected) {
                     viewModel.updateJoystickInput(x, y, rightJoystickX, rightJoystickY)
                 }
-            }
+            },
         )
 
         // ─── 右下: 移動スティック（BLE接続時はグレーアウト） ─────
         VirtualJoystick(
             label = if (isBleConnected) "移動 (BLE)" else "移動",
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                // HelpButtonの分（34dp）だけ内側に寄せる
-                .padding(end = 44.dp, bottom = 22.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    // HelpButtonの分（34dp）だけ内側に寄せる
+                    .padding(end = 44.dp, bottom = 22.dp),
             onValueChanged = { x, y ->
                 rightJoystickX = x
                 rightJoystickY = y
                 if (!isBleConnected) {
                     viewModel.updateJoystickInput(leftJoystickX, leftJoystickY, x, y)
                 }
-            }
+            },
         )
 
         // ─── 右下端: ヘルプボタン ────────────────────────────────
         HelpButton(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 10.dp, bottom = 10.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 10.dp, bottom = 10.dp),
         )
 
         // ─── BLE設定オーバーレイ ─────────────────────────────────
@@ -199,9 +206,9 @@ fun DroneControllerScreen(
                 Snackbar(
                     snackbarData = data,
                     containerColor = Color(0xFFB91C1C),
-                    contentColor = Color.White
+                    contentColor = Color.White,
                 )
-            }
+            },
         )
     }
 }
@@ -224,7 +231,7 @@ fun CameraBackground() {
         drawRect(
             color = Color(0xFF28333A),
             topLeft = Offset(0f, size.height * 0.44f),
-            size = Size(size.width, size.height * 0.13f)
+            size = Size(size.width, size.height * 0.13f),
         )
         // 道路センターライン（破線風）
         val dashCount = 12
@@ -234,7 +241,7 @@ fun CameraBackground() {
             drawRect(
                 color = Color(0xFF4A5560),
                 topLeft = Offset(x, size.height * 0.498f),
-                size = Size(w, size.height * 0.006f)
+                size = Size(w, size.height * 0.006f),
             )
         }
 
@@ -242,7 +249,7 @@ fun CameraBackground() {
         drawRect(
             color = Color(0xFF28333A),
             topLeft = Offset(size.width * 0.37f, 0f),
-            size = Size(size.width * 0.13f, size.height)
+            size = Size(size.width * 0.13f, size.height),
         )
         val dashCountV = 18
         repeat(dashCountV) { i ->
@@ -251,7 +258,7 @@ fun CameraBackground() {
             drawRect(
                 color = Color(0xFF4A5560),
                 topLeft = Offset(size.width * 0.432f, y),
-                size = Size(size.width * 0.006f, h)
+                size = Size(size.width * 0.006f, h),
             )
         }
 
@@ -277,9 +284,10 @@ fun CameraBackground() {
 
         // ─── 全体に薄い暗幕を重ねてUIを見やすくする ──────────────
         drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(Color(0x55000000), Color(0x33000000), Color(0x55000000))
-            )
+            brush =
+                Brush.verticalGradient(
+                    colors = listOf(Color(0x55000000), Color(0x33000000), Color(0x55000000)),
+                ),
         )
     }
 }
@@ -314,7 +322,7 @@ fun ScreenGridOverlay() {
 @androidx.compose.ui.tooling.preview.Preview(
     showBackground = true,
     widthDp = 390,
-    heightDp = 844
+    heightDp = 844,
 )
 @Composable
 private fun DroneControllerScreenPreview() {

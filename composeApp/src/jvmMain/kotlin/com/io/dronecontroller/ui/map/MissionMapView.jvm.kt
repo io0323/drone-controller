@@ -14,7 +14,7 @@ actual fun MissionMapView(
     droneLat: Double,
     droneLng: Double,
     onMapClick: (lat: Double, lng: Double) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     Box(modifier = modifier.background(Color(0xFF1B2228)))
 }

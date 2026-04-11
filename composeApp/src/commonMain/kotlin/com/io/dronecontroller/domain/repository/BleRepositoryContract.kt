@@ -8,8 +8,12 @@ import kotlinx.coroutines.flow.Flow
 
 interface BleRepositoryContract {
     fun scanDevices(): Flow<List<BleDevice>>
+
     suspend fun connect(address: String): RunStatus<Unit>
+
     fun disconnect()
+
     fun observeConnectionStatus(): Flow<BleConnectionStatus>
+
     fun observeControllerState(): Flow<BleControllerState>
 }

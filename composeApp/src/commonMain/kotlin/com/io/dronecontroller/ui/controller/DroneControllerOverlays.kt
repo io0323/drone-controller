@@ -15,11 +15,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Battery6Bar
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Bluetooth
-import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Route
@@ -84,43 +84,54 @@ fun StatusChips(
     batteryPercent: Int = 0,
     satelliteCount: Int = 0,
     isConnected: Boolean = false,
-    bleConnectionStatus: BleConnectionStatus = BleConnectionStatus.Disconnected
+    isReconnecting: Boolean = false,
+    bleConnectionStatus: BleConnectionStatus = BleConnectionStatus.Disconnected,
 ) {
-    val batteryTint = when {
-        batteryPercent >= 50 -> GreenAccent
-        batteryPercent >= 20 -> OrangeAccent
-        else -> RedAccent
-    }
+    val batteryTint =
+        when {
+            batteryPercent >= 50 -> GreenAccent
+            batteryPercent >= 20 -> OrangeAccent
+            else -> RedAccent
+        }
     val isBleConnected = bleConnectionStatus is BleConnectionStatus.Connected
-    val bleLabel = when (bleConnectionStatus) {
-        is BleConnectionStatus.Connected -> bleConnectionStatus.device.name.take(8)
-        is BleConnectionStatus.Connecting -> "接続中..."
-        is BleConnectionStatus.Scanning -> "スキャン中"
-        else -> "BLE"
-    }
+    val bleLabel =
+        when (bleConnectionStatus) {
+            is BleConnectionStatus.Connected -> bleConnectionStatus.device.name.take(8)
+            is BleConnectionStatus.Connecting -> "接続中..."
+            is BleConnectionStatus.Scanning -> "スキャン中"
+            else -> "BLE"
+        }
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(5.dp)
+        verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         StatusChip(
             icon = Icons.Default.SignalCellularAlt,
-            label = if (isConnected) "HD" else "--",
-            iconTint = if (isConnected) GreenAccent else Color.Gray
+            label = when {
+                isReconnecting -> "再接続中"
+                isConnected -> "HD"
+                else -> "--"
+            },
+            iconTint = when {
+                isReconnecting -> OrangeAccent
+                isConnected -> GreenAccent
+                else -> Color.Gray
+            },
         )
         StatusChip(
             icon = Icons.Default.Battery6Bar,
             label = "$batteryPercent%",
-            iconTint = batteryTint
+            iconTint = batteryTint,
         )
         StatusChip(
             icon = Icons.Default.Satellite,
             label = "$satelliteCount",
-            iconTint = BlueAccent
+            iconTint = BlueAccent,
         )
         StatusChip(
             icon = if (isBleConnected) Icons.Default.BluetoothConnected else Icons.Default.Bluetooth,
             label = if (isBleConnected) bleLabel else "--",
-            iconTint = if (isBleConnected) GreenAccent else Color.Gray
+            iconTint = if (isBleConnected) GreenAccent else Color.Gray,
         )
     }
 }
@@ -130,28 +141,28 @@ fun StatusChips(
 private fun StatusChip(
     icon: ImageVector,
     label: String,
-    iconTint: Color
+    iconTint: Color,
 ) {
     Surface(
         shape = RoundedCornerShape(50),
-        color = ChipBg
+        color = ChipBg,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(13.dp),
-                tint = iconTint
+                tint = iconTint,
             )
             Text(
                 text = label,
                 color = Color.White,
                 fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
         }
     }
@@ -169,22 +180,22 @@ private fun StatusChip(
 fun FlightInfoPanel(
     modifier: Modifier = Modifier,
     altitudeMeters: Float = 0f,
-    speedKmh: Float = 0f
+    speedKmh: Float = 0f,
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(5.dp)
+        verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         FlightInfoChip(
             icon = Icons.Default.Speed,
             value = "${"%.1f".format(speedKmh)} km/h",
-            iconTint = OrangeAccent
+            iconTint = OrangeAccent,
         )
         FlightInfoChip(
             icon = Icons.Default.LocationOn,
             value = "${"%.1f".format(altitudeMeters)} m",
-            iconTint = RedAccent
+            iconTint = RedAccent,
         )
     }
 }
@@ -194,28 +205,28 @@ fun FlightInfoPanel(
 private fun FlightInfoChip(
     icon: ImageVector,
     value: String,
-    iconTint: Color
+    iconTint: Color,
 ) {
     Surface(
         shape = RoundedCornerShape(50),
-        color = ChipBg
+        color = ChipBg,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp)
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(13.dp),
-                tint = iconTint
+                tint = iconTint,
             )
             Text(
                 text = value,
                 color = Color.White,
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
         }
     }
@@ -236,34 +247,34 @@ fun TopRightActionButtons(
     isBleConnected: Boolean = false,
     onToggleMap: () -> Unit = {},
     onOpenBleSettings: () -> Unit = {},
-    onOpenMission: () -> Unit = {}
+    onOpenMission: () -> Unit = {},
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         ActionCircleButton(
             icon = if (isBleConnected) Icons.Default.BluetoothConnected else Icons.Default.Settings,
             contentDescription = "BLE設定",
             tint = if (isBleConnected) GreenAccent else Color.White,
-            onClick = onOpenBleSettings
+            onClick = onOpenBleSettings,
         )
         ActionCircleButton(
             icon = Icons.Default.Home,
-            contentDescription = "ホーム"
+            contentDescription = "ホーム",
         )
         ActionCircleButton(
             icon = if (isMapMode) Icons.Default.Navigation else Icons.Default.Map,
             contentDescription = if (isMapMode) "カメラ映像に切替" else "地図に切替",
             tint = if (isMapMode) GreenAccent else Color.White,
-            onClick = onToggleMap
+            onClick = onToggleMap,
         )
         ActionCircleButton(
             icon = Icons.Default.Route,
             contentDescription = "ミッション計画",
             tint = BlueAccent,
-            onClick = onOpenMission
+            onClick = onOpenMission,
         )
     }
 }
@@ -274,21 +285,22 @@ private fun ActionCircleButton(
     icon: ImageVector,
     contentDescription: String,
     tint: Color = Color.White,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(38.dp)
-            .clip(CircleShape)
-            .background(ChipBg)
+        modifier =
+            Modifier
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(ChipBg),
     ) {
         IconButton(onClick = onClick) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
                 modifier = Modifier.size(18.dp),
-                tint = tint
+                tint = tint,
             )
         }
     }
@@ -305,7 +317,7 @@ private fun ActionCircleButton(
 @Composable
 fun CenterTargetMarker(modifier: Modifier = Modifier) {
     Canvas(
-        modifier = modifier.size(22.dp)
+        modifier = modifier.size(22.dp),
     ) {
         val center = Offset(size.width / 2f, size.height / 2f)
         val radius = size.minDimension / 2f
@@ -315,13 +327,13 @@ fun CenterTargetMarker(modifier: Modifier = Modifier) {
             color = Color.White.copy(alpha = 0.85f),
             radius = radius,
             center = center,
-            style = Stroke(width = 1.5.dp.toPx())
+            style = Stroke(width = 1.5.dp.toPx()),
         )
         // 中心の点
         drawCircle(
             color = Color.White.copy(alpha = 0.6f),
             radius = 2.dp.toPx(),
-            center = center
+            center = center,
         )
     }
 }
@@ -344,37 +356,38 @@ fun CameraActionButtons(
     leftX: Float = 0f,
     leftY: Float = 0f,
     rightX: Float = 0f,
-    rightY: Float = 0f
+    rightY: Float = 0f,
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // 写真撮影ボタン（大）
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .shadow(elevation = 6.dp, shape = CircleShape)
-                .size(60.dp)
-                .clip(CircleShape)
-                .background(Color.White)
+            modifier =
+                Modifier
+                    .shadow(elevation = 6.dp, shape = CircleShape)
+                    .size(60.dp)
+                    .clip(CircleShape)
+                    .background(Color.White),
         ) {
             Icon(
                 imageVector = Icons.Default.CameraAlt,
                 contentDescription = "撮影",
                 modifier = Modifier.size(26.dp),
-                tint = Color(0xFF1A1A2E)
+                tint = Color(0xFF1A1A2E),
             )
         }
 
         // ジョイスティック座標バッジ
         Surface(
             shape = RoundedCornerShape(8.dp),
-            color = Color(0xDD000000)
+            color = Color(0xDD000000),
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
             ) {
                 // 左右の値を2行で表示
                 Text(
@@ -382,7 +395,7 @@ fun CameraActionButtons(
                     color = Color.White.copy(alpha = 0.9f),
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.height(1.dp))
                 Text(
@@ -390,7 +403,7 @@ fun CameraActionButtons(
                     color = Color.White.copy(alpha = 0.9f),
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
         }
@@ -398,17 +411,18 @@ fun CameraActionButtons(
         // 動画ボタン（小）
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .shadow(elevation = 4.dp, shape = CircleShape)
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(Color.White)
+            modifier =
+                Modifier
+                    .shadow(elevation = 4.dp, shape = CircleShape)
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Color.White),
         ) {
             Icon(
                 imageVector = Icons.Default.Videocam,
                 contentDescription = "動画",
                 modifier = Modifier.size(22.dp),
-                tint = Color(0xFF1A1A2E)
+                tint = Color(0xFF1A1A2E),
             )
         }
     }
@@ -425,16 +439,17 @@ fun CameraActionButtons(
 fun HelpButton(modifier: Modifier = Modifier) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(28.dp)
-            .clip(CircleShape)
-            .background(ChipBg)
+        modifier =
+            modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(ChipBg),
     ) {
         Text(
             text = "?",
             color = Color.White,
             fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -461,7 +476,7 @@ fun CommandButtons(
     commandStatus: RunStatus<Unit>? = null,
     onTakeoff: () -> Unit = {},
     onLand: () -> Unit = {},
-    onReturnToLaunch: () -> Unit = {}
+    onReturnToLaunch: () -> Unit = {},
 ) {
     val isLoading = commandStatus is RunStatus.Loading
     val errorMessage = (commandStatus as? RunStatus.Error)?.message
@@ -469,49 +484,49 @@ fun CommandButtons(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.size(20.dp),
                 color = Color.White,
-                strokeWidth = 2.dp
+                strokeWidth = 2.dp,
             )
         }
         if (errorMessage != null) {
             Surface(
                 shape = RoundedCornerShape(6.dp),
-                color = Color(0xCCCC3333)
+                color = Color(0xCCCC3333),
             ) {
                 Text(
                     text = errorMessage,
                     color = Color.White,
                     fontSize = 10.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                 )
             }
         }
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CommandButton(
                 label = "離陸",
                 enabled = isConnected && isArmed && !isLoading,
                 color = Color(0xFF4ADE80),
-                onClick = onTakeoff
+                onClick = onTakeoff,
             )
             CommandButton(
                 label = "着陸",
                 enabled = isConnected && !isLoading,
                 color = Color(0xFF60A5FA),
-                onClick = onLand
+                onClick = onLand,
             )
             CommandButton(
                 label = "RTL",
                 enabled = isConnected && !isLoading,
                 color = Color(0xFFFB923C),
-                onClick = onReturnToLaunch
+                onClick = onReturnToLaunch,
             )
         }
     }
@@ -522,22 +537,23 @@ private fun CommandButton(
     label: String,
     enabled: Boolean,
     color: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = color.copy(alpha = 0.85f),
-            disabledContainerColor = Color(0x55888888)
-        ),
-        modifier = Modifier.height(34.dp)
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = color.copy(alpha = 0.85f),
+                disabledContainerColor = Color(0x55888888),
+            ),
+        modifier = Modifier.height(34.dp),
     ) {
         Text(
             text = label,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            color = if (enabled) Color.Black else Color.White.copy(alpha = 0.4f)
+            color = if (enabled) Color.Black else Color.White.copy(alpha = 0.4f),
         )
     }
 }
