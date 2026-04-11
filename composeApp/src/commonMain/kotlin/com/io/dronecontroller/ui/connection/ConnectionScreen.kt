@@ -24,7 +24,12 @@ import com.io.dronecontroller.domain.model.ConnectionStatus
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun ConnectionScreen(viewModel: ConnectionViewModelContract = koinViewModel<ConnectionViewModel>()) {
+fun ConnectionScreen(
+    onStartService: () -> Unit = {},
+    onConnected: () -> Unit = {},
+    onDebugMode: () -> Unit = {},
+    viewModel: ConnectionViewModelContract = koinViewModel<ConnectionViewModel>(),
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.status) {
@@ -42,6 +47,7 @@ fun ConnectionScreen(viewModel: ConnectionViewModelContract = koinViewModel<Conn
         onDisconnect = viewModel::disconnect,
         onAddressChange = viewModel::updateAddress,
         onPortChange = { viewModel.updatePort(it.toIntOrNull() ?: 50051) },
+        onDebugMode = onDebugMode,
     )
 }
 
@@ -52,12 +58,10 @@ private fun ConnectionContent(
     onDisconnect: () -> Unit,
     onAddressChange: (String) -> Unit,
     onPortChange: (String) -> Unit,
+    onDebugMode: () -> Unit = {},
 ) {
     Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -113,6 +117,12 @@ private fun ConnectionContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         StatusDisplay(status = uiState.status)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = onDebugMode) {
+            Text("デバッグモードで起動")
+        }
     }
 }
 
@@ -137,10 +147,7 @@ private fun StatusDisplay(status: ConnectionStatus) {
 private fun ConnectionScreenPreview() {
     MaterialTheme {
         ConnectionContent(
-            uiState =
-                ConnectionUiState(
-                    status = ConnectionStatus.Connected(lastHeartbeatAt = 0L),
-                ),
+            uiState = ConnectionUiState(status = ConnectionStatus.Connected(lastHeartbeatAt = 0L)),
             onConnect = {},
             onDisconnect = {},
             onAddressChange = {},
