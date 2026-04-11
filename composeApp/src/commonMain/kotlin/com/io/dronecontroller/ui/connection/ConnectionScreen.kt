@@ -23,16 +23,14 @@ import com.io.dronecontroller.domain.model.ConnectionStatus
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun ConnectionScreen(
-    viewModel: ConnectionViewModelContract = koinViewModel<ConnectionViewModel>()
-) {
+fun ConnectionScreen(viewModel: ConnectionViewModelContract = koinViewModel<ConnectionViewModel>()) {
     val uiState by viewModel.uiState.collectAsState()
     ConnectionContent(
         uiState = uiState,
         onConnect = viewModel::connect,
         onDisconnect = viewModel::disconnect,
         onAddressChange = viewModel::updateAddress,
-        onPortChange = { viewModel.updatePort(it.toIntOrNull() ?: 50051) }
+        onPortChange = { viewModel.updatePort(it.toIntOrNull() ?: 50051) },
     )
 }
 
@@ -42,18 +40,19 @@ private fun ConnectionContent(
     onConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onAddressChange: (String) -> Unit,
-    onPortChange: (String) -> Unit
+    onPortChange: (String) -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = "ドローン接続",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -63,7 +62,7 @@ private fun ConnectionContent(
             onValueChange = onAddressChange,
             label = { Text("アドレス") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = uiState.status !is ConnectionStatus.Connected
+            enabled = uiState.status !is ConnectionStatus.Connected,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -73,7 +72,7 @@ private fun ConnectionContent(
             onValueChange = onPortChange,
             label = { Text("ポート") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = uiState.status !is ConnectionStatus.Connected
+            enabled = uiState.status !is ConnectionStatus.Connected,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -81,8 +80,9 @@ private fun ConnectionContent(
         Row {
             Button(
                 onClick = onConnect,
-                enabled = uiState.status is ConnectionStatus.Disconnected ||
-                    uiState.status is ConnectionStatus.Error
+                enabled =
+                    uiState.status is ConnectionStatus.Disconnected ||
+                        uiState.status is ConnectionStatus.Error,
             ) {
                 Text("接続")
             }
@@ -91,8 +91,9 @@ private fun ConnectionContent(
 
             Button(
                 onClick = onDisconnect,
-                enabled = uiState.status is ConnectionStatus.Connecting ||
-                    uiState.status is ConnectionStatus.Connected
+                enabled =
+                    uiState.status is ConnectionStatus.Connecting ||
+                        uiState.status is ConnectionStatus.Connected,
             ) {
                 Text("切断")
             }
@@ -106,16 +107,17 @@ private fun ConnectionContent(
 
 @Composable
 private fun StatusDisplay(status: ConnectionStatus) {
-    val (label, color) = when (status) {
-        is ConnectionStatus.Disconnected -> "未接続" to MaterialTheme.colorScheme.outline
-        is ConnectionStatus.Connecting -> "接続中..." to MaterialTheme.colorScheme.primary
-        is ConnectionStatus.Connected -> "接続済み (HEARTBEAT受信済み)" to MaterialTheme.colorScheme.tertiary
-        is ConnectionStatus.Error -> "エラー: ${status.message}" to MaterialTheme.colorScheme.error
-    }
+    val (label, color) =
+        when (status) {
+            is ConnectionStatus.Disconnected -> "未接続" to MaterialTheme.colorScheme.outline
+            is ConnectionStatus.Connecting -> "接続中..." to MaterialTheme.colorScheme.primary
+            is ConnectionStatus.Connected -> "接続済み (HEARTBEAT受信済み)" to MaterialTheme.colorScheme.tertiary
+            is ConnectionStatus.Error -> "エラー: ${status.message}" to MaterialTheme.colorScheme.error
+        }
     Text(
         text = label,
         style = MaterialTheme.typography.bodyLarge,
-        color = color
+        color = color,
     )
 }
 
@@ -124,13 +126,14 @@ private fun StatusDisplay(status: ConnectionStatus) {
 private fun ConnectionScreenPreview() {
     MaterialTheme {
         ConnectionContent(
-            uiState = ConnectionUiState(
-                status = ConnectionStatus.Connected(lastHeartbeatAt = 0L)
-            ),
+            uiState =
+                ConnectionUiState(
+                    status = ConnectionStatus.Connected(lastHeartbeatAt = 0L),
+                ),
             onConnect = {},
             onDisconnect = {},
             onAddressChange = {},
-            onPortChange = {}
+            onPortChange = {},
         )
     }
 }

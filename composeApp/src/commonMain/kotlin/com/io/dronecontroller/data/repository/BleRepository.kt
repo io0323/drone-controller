@@ -9,11 +9,15 @@ import com.io.dronecontroller.domain.repository.BleRepositoryContract
 import kotlinx.coroutines.flow.Flow
 
 class BleRepository(
-    private val dataSource: BleDataSourceContract
+    private val dataSource: BleDataSourceContract,
 ) : BleRepositoryContract {
     override fun scanDevices(): Flow<List<BleDevice>> = dataSource.scanDevices()
+
     override suspend fun connect(address: String): RunStatus<Unit> = dataSource.connect(address)
+
     override fun disconnect() = dataSource.disconnect()
+
     override fun observeConnectionStatus(): Flow<BleConnectionStatus> = dataSource.observeConnectionStatus()
+
     override fun observeControllerState(): Flow<BleControllerState> = dataSource.observeControllerState()
 }

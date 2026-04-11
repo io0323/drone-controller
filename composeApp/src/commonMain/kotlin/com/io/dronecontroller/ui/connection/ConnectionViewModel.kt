@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ConnectionViewModel(
-    private val observeConnection: ObserveConnectionUseCaseContract
-) : ViewModel(), ConnectionViewModelContract {
-
+    private val observeConnection: ObserveConnectionUseCaseContract,
+) : ViewModel(),
+    ConnectionViewModelContract {
     private val _uiState = MutableStateFlow(ConnectionUiState())
     override val uiState: StateFlow<ConnectionUiState> = _uiState.asStateFlow()
 
@@ -24,12 +24,13 @@ class ConnectionViewModel(
         val current = _uiState.value
         connectionJob?.cancel()
         _uiState.update { it.copy(status = ConnectionStatus.Connecting) }
-        connectionJob = viewModelScope.launch {
-            observeConnection(current.address, current.port)
-                .collect { status ->
-                    _uiState.update { it.copy(status = status) }
-                }
-        }
+        connectionJob =
+            viewModelScope.launch {
+                observeConnection(current.address, current.port)
+                    .collect { status ->
+                        _uiState.update { it.copy(status = status) }
+                    }
+            }
     }
 
     override fun disconnect() {

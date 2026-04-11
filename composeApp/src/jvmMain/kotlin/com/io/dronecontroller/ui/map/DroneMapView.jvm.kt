@@ -12,7 +12,7 @@ actual fun DroneMapView(
     latitude: Double,
     longitude: Double,
     bearing: Float,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     Box(modifier = modifier.background(Color(0xFF1B2228)))
 }

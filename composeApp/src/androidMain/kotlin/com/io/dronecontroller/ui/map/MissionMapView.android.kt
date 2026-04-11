@@ -26,40 +26,46 @@ actual fun MissionMapView(
     droneLat: Double,
     droneLng: Double,
     onMapClick: (lat: Double, lng: Double) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     val hasPosition = droneLat != 0.0 || droneLng != 0.0
-    val centerLat = when {
-        waypoints.isNotEmpty() -> waypoints.first().latitudeDeg
-        hasPosition -> droneLat
-        else -> DEFAULT_LAT
-    }
-    val centerLng = when {
-        waypoints.isNotEmpty() -> waypoints.first().longitudeDeg
-        hasPosition -> droneLng
-        else -> DEFAULT_LNG
-    }
+    val centerLat =
+        when {
+            waypoints.isNotEmpty() -> waypoints.first().latitudeDeg
+            hasPosition -> droneLat
+            else -> DEFAULT_LAT
+        }
+    val centerLng =
+        when {
+            waypoints.isNotEmpty() -> waypoints.first().longitudeDeg
+            hasPosition -> droneLng
+            else -> DEFAULT_LNG
+        }
 
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(centerLat, centerLng), MAP_ZOOM)
-    }
+    val cameraPositionState =
+        rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(LatLng(centerLat, centerLng), MAP_ZOOM)
+        }
 
-    val waypointPositions = remember(waypoints) {
-        waypoints.map { LatLng(it.latitudeDeg, it.longitudeDeg) }
-    }
+    val waypointPositions =
+        remember(waypoints) {
+            waypoints.map { LatLng(it.latitudeDeg, it.longitudeDeg) }
+        }
 
     GoogleMap(
         modifier = modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         properties = MapProperties(mapType = MapType.SATELLITE),
-        onMapClick = { latLng -> onMapClick(latLng.latitude, latLng.longitude) }
+        onMapClick = { latLng -> onMapClick(latLng.latitude, latLng.longitude) },
     ) {
         // ウェイポイント間を結ぶ線
         if (waypointPositions.size >= 2) {
             Polyline(
                 points = waypointPositions,
-                color = androidx.compose.ui.graphics.Color(0xFF00BFFF),
-                width = 5f
+                color =
+                    androidx.compose.ui.graphics
+                        .Color(0xFF00BFFF),
+                width = 5f,
             )
         }
 
@@ -69,7 +75,7 @@ actual fun MissionMapView(
                 state = MarkerState(position = LatLng(item.latitudeDeg, item.longitudeDeg)),
                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
                 title = "WP${index + 1}",
-                snippet = "高度: ${"%.1f".format(item.altitudeMeters)} m  速度: ${"%.1f".format(item.speedMS)} m/s"
+                snippet = "高度: ${"%.1f".format(item.altitudeMeters)} m  速度: ${"%.1f".format(item.speedMS)} m/s",
             )
         }
 
@@ -78,7 +84,7 @@ actual fun MissionMapView(
             Marker(
                 state = MarkerState(position = LatLng(droneLat, droneLng)),
                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN),
-                title = "機体位置"
+                title = "機体位置",
             )
         }
     }

@@ -8,25 +8,30 @@ import com.io.dronecontroller.domain.repository.MavlinkRepositoryContract
 import kotlinx.coroutines.flow.Flow
 
 class MavlinkRepository(
-    private val dataSource: MavlinkDataSourceContract
+    private val dataSource: MavlinkDataSourceContract,
 ) : MavlinkRepositoryContract {
-    override fun observeConnection(address: String, port: Int): Flow<ConnectionStatus> =
-        dataSource.observeConnectionState(address, port)
+    override fun observeConnection(
+        address: String,
+        port: Int,
+    ): Flow<ConnectionStatus> = dataSource.observeConnectionState(address, port)
 
-    override fun observeDroneState(address: String, port: Int): Flow<DroneState> =
-        dataSource.observeDroneState(address, port)
+    override fun observeDroneState(
+        address: String,
+        port: Int,
+    ): Flow<DroneState> = dataSource.observeDroneState(address, port)
 
     override fun disconnect() = dataSource.disconnect()
 
-    override suspend fun takeoff(altitudeMeters: Float): RunStatus<Unit> =
-        dataSource.takeoff(altitudeMeters)
+    override suspend fun takeoff(altitudeMeters: Float): RunStatus<Unit> = dataSource.takeoff(altitudeMeters)
 
-    override suspend fun land(): RunStatus<Unit> =
-        dataSource.land()
+    override suspend fun land(): RunStatus<Unit> = dataSource.land()
 
-    override suspend fun returnToLaunch(): RunStatus<Unit> =
-        dataSource.returnToLaunch()
+    override suspend fun returnToLaunch(): RunStatus<Unit> = dataSource.returnToLaunch()
 
-    override fun sendManualControl(pitch: Float, roll: Float, throttle: Float, yaw: Float) =
-        dataSource.sendManualControl(pitch, roll, throttle, yaw)
+    override fun sendManualControl(
+        pitch: Float,
+        roll: Float,
+        throttle: Float,
+        yaw: Float,
+    ) = dataSource.sendManualControl(pitch, roll, throttle, yaw)
 }

@@ -16,8 +16,6 @@ import com.io.dronecontroller.domain.model.BleConnectionStatus
 import com.io.dronecontroller.domain.model.BleControllerState
 import com.io.dronecontroller.domain.model.BleDevice
 import com.io.dronecontroller.domain.model.RunStatus
-import java.util.UUID
-import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,13 +24,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.UUID
+import kotlin.coroutines.resume
 
 @SuppressLint("MissingPermission")
-class BleDataSource(private val context: Context) : BleDataSourceContract {
-
+class BleDataSource(
+    private val context: Context,
+) : BleDataSourceContract {
     private val bluetoothAdapter =
         (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -47,59 +47,69 @@ class BleDataSource(private val context: Context) : BleDataSourceContract {
         private val CCC_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
     }
 
-    override fun scanDevices(): Flow<List<BleDevice>> = callbackFlow {
-        val scanner = bluetoothAdapter?.bluetoothLeScanner
-        if (scanner == null) {
-            trySend(emptyList())
-            close()
-            return@callbackFlow
-        }
+    override fun scanDevices(): Flow<List<BleDevice>> =
+        callbackFlow {
+            val scanner = bluetoothAdapter?.bluetoothLeScanner
+            if (scanner == null) {
+                trySend(emptyList())
+                close()
+                return@callbackFlow
+            }
 
-        val found = mutableListOf<BleDevice>()
-        _connectionStatus.value = BleConnectionStatus.Scanning
+            val found = mutableListOf<BleDevice>()
+            _connectionStatus.value = BleConnectionStatus.Scanning
 
-        val scanCallback = object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult) {
-                val name = result.device.name?.takeIf { it.isNotBlank() }
-                    ?: "Unknown (${result.device.address.takeLast(5)})"
-                val device = BleDevice(name = name, address = result.device.address)
-                if (found.none { it.address == device.address }) {
-                    found.add(device)
-                    trySend(found.toList())
+            val scanCallback =
+                object : ScanCallback() {
+                    override fun onScanResult(
+                        callbackType: Int,
+                        result: ScanResult,
+                    ) {
+                        val name =
+                            result.device.name?.takeIf { it.isNotBlank() }
+                                ?: "Unknown (${result.device.address.takeLast(5)})"
+                        val device = BleDevice(name = name, address = result.device.address)
+                        if (found.none { it.address == device.address }) {
+                            found.add(device)
+                            trySend(found.toList())
+                        }
+                    }
+                }
+
+            scanner.startScan(scanCallback)
+
+            awaitClose {
+                scanner.stopScan(scanCallback)
+                if (_connectionStatus.value is BleConnectionStatus.Scanning) {
+                    _connectionStatus.value = BleConnectionStatus.Disconnected
                 }
             }
         }
 
-        scanner.startScan(scanCallback)
-
-        awaitClose {
-            scanner.stopScan(scanCallback)
-            if (_connectionStatus.value is BleConnectionStatus.Scanning) {
-                _connectionStatus.value = BleConnectionStatus.Disconnected
-            }
-        }
-    }
-
     override suspend fun connect(address: String): RunStatus<Unit> {
-        val remoteDevice = runCatching { bluetoothAdapter?.getRemoteDevice(address) }.getOrNull()
-            ?: return RunStatus.Error("デバイスが見つかりません: $address")
+        val remoteDevice =
+            runCatching { bluetoothAdapter?.getRemoteDevice(address) }.getOrNull()
+                ?: return RunStatus.Error("デバイスが見つかりません: $address")
 
-        val bleDevice = BleDevice(
-            name = remoteDevice.name?.takeIf { it.isNotBlank() } ?: address,
-            address = address
-        )
+        val bleDevice =
+            BleDevice(
+                name = remoteDevice.name?.takeIf { it.isNotBlank() } ?: address,
+                address = address,
+            )
         _connectionStatus.value = BleConnectionStatus.Connecting(bleDevice)
 
         return suspendCancellableCoroutine { cont ->
-            val callback = buildGattCallback(bleDevice) { result ->
-                if (cont.isActive) cont.resume(result)
-            }
+            val callback =
+                buildGattCallback(bleDevice) { result ->
+                    if (cont.isActive) cont.resume(result)
+                }
 
-            val newGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                remoteDevice.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
-            } else {
-                remoteDevice.connectGatt(context, false, callback)
-            }
+            val newGatt =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    remoteDevice.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
+                } else {
+                    remoteDevice.connectGatt(context, false, callback)
+                }
 
             cont.invokeOnCancellation {
                 newGatt?.disconnect()
@@ -112,10 +122,13 @@ class BleDataSource(private val context: Context) : BleDataSourceContract {
 
     private fun buildGattCallback(
         device: BleDevice,
-        onConnectResult: (RunStatus<Unit>) -> Unit
+        onConnectResult: (RunStatus<Unit>) -> Unit,
     ) = object : BluetoothGattCallback() {
-
-        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+        override fun onConnectionStateChange(
+            gatt: BluetoothGatt,
+            status: Int,
+            newState: Int,
+        ) {
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     this@BleDataSource.gatt = gatt
@@ -132,7 +145,10 @@ class BleDataSource(private val context: Context) : BleDataSourceContract {
             }
         }
 
-        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+        override fun onServicesDiscovered(
+            gatt: BluetoothGatt,
+            status: Int,
+        ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 enableHidNotifications(gatt)
             }
@@ -142,7 +158,7 @@ class BleDataSource(private val context: Context) : BleDataSourceContract {
         @Suppress("DEPRECATION")
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic
+            characteristic: BluetoothGattCharacteristic,
         ) {
             parseHidReport(characteristic.value ?: return)
         }
@@ -170,13 +186,15 @@ class BleDataSource(private val context: Context) : BleDataSourceContract {
      */
     private fun parseHidReport(data: ByteArray) {
         if (data.size < 4) return
+
         fun byteToAxis(b: Byte) = ((b.toInt() and 0xFF) - 127f) / 127f
-        _controllerState.value = BleControllerState(
-            leftX = byteToAxis(data[0]).coerceIn(-1f, 1f),
-            leftY = byteToAxis(data[1]).coerceIn(-1f, 1f),
-            rightX = byteToAxis(data[2]).coerceIn(-1f, 1f),
-            rightY = byteToAxis(data[3]).coerceIn(-1f, 1f)
-        )
+        _controllerState.value =
+            BleControllerState(
+                leftX = byteToAxis(data[0]).coerceIn(-1f, 1f),
+                leftY = byteToAxis(data[1]).coerceIn(-1f, 1f),
+                rightX = byteToAxis(data[2]).coerceIn(-1f, 1f),
+                rightY = byteToAxis(data[3]).coerceIn(-1f, 1f),
+            )
     }
 
     override fun disconnect() {
@@ -188,5 +206,6 @@ class BleDataSource(private val context: Context) : BleDataSourceContract {
     }
 
     override fun observeConnectionStatus(): Flow<BleConnectionStatus> = _connectionStatus.asStateFlow()
+
     override fun observeControllerState(): Flow<BleControllerState> = _controllerState.asStateFlow()
 }

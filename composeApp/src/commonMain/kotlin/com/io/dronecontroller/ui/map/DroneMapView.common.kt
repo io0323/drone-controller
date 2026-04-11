@@ -16,5 +16,5 @@ expect fun DroneMapView(
     latitude: Double,
     longitude: Double,
     bearing: Float,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 )

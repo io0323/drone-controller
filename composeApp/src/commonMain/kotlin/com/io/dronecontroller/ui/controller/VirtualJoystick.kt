@@ -46,7 +46,7 @@ fun VirtualJoystick(
     label: String,
     modifier: Modifier = Modifier,
     joystickSize: Dp = 130.dp,
-    onValueChanged: (x: Float, y: Float) -> Unit = { _, _ -> }
+    onValueChanged: (x: Float, y: Float) -> Unit = { _, _ -> },
 ) {
     val scope = rememberCoroutineScope()
 
@@ -56,81 +56,83 @@ fun VirtualJoystick(
 
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // ラベル
         Text(
             text = label,
             color = Color.White.copy(alpha = 0.85f),
             fontSize = 10.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
         Spacer(modifier = Modifier.height(4.dp))
 
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(joystickSize)
-                .pointerInput(Unit) {
-                    // PointerInputScope.size はピクセル単位 — dp変換不要
-                    val maxRadius = size.width / 2f * 0.70f
+            modifier =
+                Modifier
+                    .size(joystickSize)
+                    .pointerInput(Unit) {
+                        // PointerInputScope.size はピクセル単位 — dp変換不要
+                        val maxRadius = size.width / 2f * 0.70f
 
-                    detectDragGestures(
-                        onDragEnd = {
-                            // 指を離したらバネアニメで中央に戻す
-                            scope.launch {
-                                launch {
-                                    knobX.animateTo(
-                                        0f,
-                                        spring(
-                                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                                            stiffness = Spring.StiffnessMediumLow
+                        detectDragGestures(
+                            onDragEnd = {
+                                // 指を離したらバネアニメで中央に戻す
+                                scope.launch {
+                                    launch {
+                                        knobX.animateTo(
+                                            0f,
+                                            spring(
+                                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                stiffness = Spring.StiffnessMediumLow,
+                                            ),
                                         )
-                                    )
-                                }
-                                launch {
-                                    knobY.animateTo(
-                                        0f,
-                                        spring(
-                                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                                            stiffness = Spring.StiffnessMediumLow
+                                    }
+                                    launch {
+                                        knobY.animateTo(
+                                            0f,
+                                            spring(
+                                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                stiffness = Spring.StiffnessMediumLow,
+                                            ),
                                         )
-                                    )
+                                    }
                                 }
-                            }
-                            onValueChanged(0f, 0f)
-                        },
-                        onDragCancel = {
-                            scope.launch {
-                                knobX.snapTo(0f)
-                                knobY.snapTo(0f)
-                            }
-                            onValueChanged(0f, 0f)
-                        },
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            val newX = knobX.value + dragAmount.x
-                            val newY = knobY.value + dragAmount.y
-                            val distance = sqrt(newX * newX + newY * newY)
+                                onValueChanged(0f, 0f)
+                            },
+                            onDragCancel = {
+                                scope.launch {
+                                    knobX.snapTo(0f)
+                                    knobY.snapTo(0f)
+                                }
+                                onValueChanged(0f, 0f)
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                val newX = knobX.value + dragAmount.x
+                                val newY = knobY.value + dragAmount.y
+                                val distance = sqrt(newX * newX + newY * newY)
 
-                            // 移動範囲を円内に制限
-                            val (clampedX, clampedY) = if (distance <= maxRadius) {
-                                newX to newY
-                            } else {
-                                val scale = maxRadius / distance
-                                newX * scale to newY * scale
-                            }
+                                // 移動範囲を円内に制限
+                                val (clampedX, clampedY) =
+                                    if (distance <= maxRadius) {
+                                        newX to newY
+                                    } else {
+                                        val scale = maxRadius / distance
+                                        newX * scale to newY * scale
+                                    }
 
-                            scope.launch { knobX.snapTo(clampedX) }
-                            scope.launch { knobY.snapTo(clampedY) }
+                                scope.launch { knobX.snapTo(clampedX) }
+                                scope.launch { knobY.snapTo(clampedY) }
 
-                            onValueChanged(
-                                (clampedX / maxRadius).coerceIn(-1f, 1f),
-                                (clampedY / maxRadius).coerceIn(-1f, 1f)
-                            )
-                        }
-                    )
-                }
+                                onValueChanged(
+                                    (clampedX / maxRadius).coerceIn(-1f, 1f),
+                                    (clampedY / maxRadius).coerceIn(-1f, 1f),
+                                )
+                            },
+                        )
+                    },
         ) {
             // ジョイスティックのベース（外円・内リング・クロスライン）をCanvasで描画
             Canvas(modifier = Modifier.size(joystickSize)) {
@@ -142,51 +144,51 @@ fun VirtualJoystick(
                 drawCircle(
                     color = Color.White.copy(alpha = 0.07f),
                     radius = outerRadius,
-                    center = center
+                    center = center,
                 )
                 // 外円のリング
                 drawCircle(
                     color = Color.White.copy(alpha = 0.28f),
                     radius = outerRadius,
                     center = center,
-                    style = Stroke(width = 1.2.dp.toPx())
+                    style = Stroke(width = 1.2.dp.toPx()),
                 )
                 // 内側のリング
                 drawCircle(
                     color = Color.White.copy(alpha = 0.18f),
                     radius = innerRadius,
                     center = center,
-                    style = Stroke(width = 1.dp.toPx())
+                    style = Stroke(width = 1.dp.toPx()),
                 )
                 // 縦クロスライン
                 drawLine(
                     color = Color.White.copy(alpha = 0.15f),
                     start = Offset(center.x, center.y - outerRadius),
                     end = Offset(center.x, center.y + outerRadius),
-                    strokeWidth = 0.7.dp.toPx()
+                    strokeWidth = 0.7.dp.toPx(),
                 )
                 // 横クロスライン
                 drawLine(
                     color = Color.White.copy(alpha = 0.15f),
                     start = Offset(center.x - outerRadius, center.y),
                     end = Offset(center.x + outerRadius, center.y),
-                    strokeWidth = 0.7.dp.toPx()
+                    strokeWidth = 0.7.dp.toPx(),
                 )
             }
 
             // ノブ — Animatableの値でオフセット
             Box(
-                modifier = Modifier
-                    .offset {
-                        IntOffset(
-                            knobX.value.roundToInt(),
-                            knobY.value.roundToInt()
-                        )
-                    }
-                    .size(30.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.38f))
-                    .border(1.5.dp, Color.White.copy(alpha = 0.75f), CircleShape)
+                modifier =
+                    Modifier
+                        .offset {
+                            IntOffset(
+                                knobX.value.roundToInt(),
+                                knobY.value.roundToInt(),
+                            )
+                        }.size(30.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.38f))
+                        .border(1.5.dp, Color.White.copy(alpha = 0.75f), CircleShape),
             )
         }
     }

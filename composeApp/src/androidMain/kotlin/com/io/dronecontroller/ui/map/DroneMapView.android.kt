@@ -25,27 +25,29 @@ actual fun DroneMapView(
     latitude: Double,
     longitude: Double,
     bearing: Float,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     val hasPosition = latitude != 0.0 || longitude != 0.0
     val initialLat = if (hasPosition) latitude else DEFAULT_LAT
     val initialLng = if (hasPosition) longitude else DEFAULT_LNG
 
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(initialLat, initialLng), MAP_ZOOM)
-    }
+    val cameraPositionState =
+        rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(LatLng(initialLat, initialLng), MAP_ZOOM)
+        }
 
     LaunchedEffect(latitude, longitude) {
         if (hasPosition) {
             cameraPositionState.animate(
-                CameraUpdateFactory.newLatLng(LatLng(latitude, longitude))
+                CameraUpdateFactory.newLatLng(LatLng(latitude, longitude)),
             )
         }
     }
 
-    val markerState = remember(latitude, longitude) {
-        MarkerState(position = LatLng(initialLat, initialLng))
-    }
+    val markerState =
+        remember(latitude, longitude) {
+            MarkerState(position = LatLng(initialLat, initialLng))
+        }
 
     LaunchedEffect(latitude, longitude) {
         if (hasPosition) {
@@ -56,16 +58,18 @@ actual fun DroneMapView(
     GoogleMap(
         modifier = modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
-        properties = MapProperties(mapType = MapType.SATELLITE)
+        properties = MapProperties(mapType = MapType.SATELLITE),
     ) {
         Marker(
             state = markerState,
             rotation = bearing,
             flat = true,
-            anchor = androidx.compose.ui.geometry.Offset(0.5f, 0.5f),
+            anchor =
+                androidx.compose.ui.geometry
+                    .Offset(0.5f, 0.5f),
             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN),
             title = "機体位置",
-            snippet = "Alt: ${"%.1f".format(if (hasPosition) 0f else 0f)} m"
+            snippet = "Alt: ${"%.1f".format(if (hasPosition) 0f else 0f)} m",
         )
     }
 }

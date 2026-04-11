@@ -9,5 +9,5 @@ data class DroneState(
     val isArmed: Boolean = false,
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
-    val bearing: Float = 0f
+    val bearing: Float = 0f,
 )

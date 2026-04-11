@@ -10,11 +10,12 @@ import kotlinx.coroutines.flow.flowOf
 /** iOS / JVM 向けスタブ（BLE非対応プラットフォーム） */
 class BleDataSourceStub : BleDataSourceContract {
     override fun scanDevices(): Flow<List<BleDevice>> = flowOf(emptyList())
-    override suspend fun connect(address: String): RunStatus<Unit> =
-        RunStatus.Error("BLE非対応プラットフォーム")
+
+    override suspend fun connect(address: String): RunStatus<Unit> = RunStatus.Error("BLE非対応プラットフォーム")
+
     override fun disconnect() = Unit
-    override fun observeConnectionStatus(): Flow<BleConnectionStatus> =
-        flowOf(BleConnectionStatus.Disconnected)
-    override fun observeControllerState(): Flow<BleControllerState> =
-        flowOf(BleControllerState())
+
+    override fun observeConnectionStatus(): Flow<BleConnectionStatus> = flowOf(BleConnectionStatus.Disconnected)
+
+    override fun observeControllerState(): Flow<BleControllerState> = flowOf(BleControllerState())
 }

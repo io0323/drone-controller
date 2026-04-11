@@ -19,9 +19,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -68,19 +68,17 @@ fun MissionPlanningScreen(
     onBack: () -> Unit,
     droneLat: Double = 0.0,
     droneLng: Double = 0.0,
-    viewModel: MissionPlanningViewModelContract = koinViewModel<MissionPlanningViewModel>()
+    viewModel: MissionPlanningViewModelContract = koinViewModel<MissionPlanningViewModel>(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var editingIndex by remember { mutableStateOf<Int?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(BgColor)) {
-
         Column(modifier = Modifier.fillMaxSize()) {
-
             // ─── トップバー ───────────────────────────────────────
             MissionTopBar(
                 missionStatus = uiState.missionStatus,
-                onBack = onBack
+                onBack = onBack,
             )
 
             // ─── 地図（上半分） ──────────────────────────────────
@@ -89,16 +87,17 @@ fun MissionPlanningScreen(
                 droneLat = droneLat,
                 droneLng = droneLng,
                 onMapClick = { lat, lng -> viewModel.addWaypoint(lat, lng) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.45f)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(0.45f),
             )
 
             // ─── ミッション進捗バー ──────────────────────────────
             uiState.progress?.let { progress ->
                 MissionProgressBar(
                     currentIndex = progress.currentItemIndex,
-                    total = progress.missionCount
+                    total = progress.missionCount,
                 )
             }
 
@@ -110,7 +109,7 @@ fun MissionPlanningScreen(
                 onUpload = { viewModel.uploadMission() },
                 onStart = { viewModel.startMission() },
                 onStop = { viewModel.stopMission() },
-                onPause = { viewModel.pauseMission() }
+                onPause = { viewModel.pauseMission() },
             )
 
             // ─── ウェイポイントリスト（下半分） ──────────────────
@@ -118,7 +117,7 @@ fun MissionPlanningScreen(
                 waypoints = uiState.waypoints,
                 onEdit = { index -> editingIndex = index },
                 onDelete = { index -> viewModel.removeWaypoint(index) },
-                modifier = Modifier.weight(0.55f)
+                modifier = Modifier.weight(0.55f),
             )
         }
 
@@ -133,7 +132,7 @@ fun MissionPlanningScreen(
                         Text("OK", color = AccentBlue)
                     }
                 },
-                containerColor = CardBg
+                containerColor = CardBg,
             )
         }
 
@@ -148,7 +147,7 @@ fun MissionPlanningScreen(
                         viewModel.updateWaypoint(index, updated)
                         editingIndex = null
                     },
-                    onDismiss = { editingIndex = null }
+                    onDismiss = { editingIndex = null },
                 )
             }
         }
@@ -162,30 +161,33 @@ fun MissionPlanningScreen(
 @Composable
 private fun MissionTopBar(
     missionStatus: MissionStatus,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
-    val statusLabel = when (missionStatus) {
-        MissionStatus.Idle -> "待機中"
-        MissionStatus.Uploading -> "送信中"
-        MissionStatus.Running -> "実行中"
-        MissionStatus.Paused -> "一時停止"
-        MissionStatus.Complete -> "完了"
-        MissionStatus.Error -> "エラー"
-    }
-    val statusColor = when (missionStatus) {
-        MissionStatus.Running -> AccentGreen
-        MissionStatus.Paused -> AccentOrange
-        MissionStatus.Error -> AccentRed
-        MissionStatus.Complete -> AccentBlue
-        else -> TextSecondary
-    }
+    val statusLabel =
+        when (missionStatus) {
+            MissionStatus.Idle -> "待機中"
+            MissionStatus.Uploading -> "送信中"
+            MissionStatus.Running -> "実行中"
+            MissionStatus.Paused -> "一時停止"
+            MissionStatus.Complete -> "完了"
+            MissionStatus.Error -> "エラー"
+        }
+    val statusColor =
+        when (missionStatus) {
+            MissionStatus.Running -> AccentGreen
+            MissionStatus.Paused -> AccentOrange
+            MissionStatus.Error -> AccentRed
+            MissionStatus.Complete -> AccentBlue
+            else -> TextSecondary
+        }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(CardBg)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(CardBg)
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onBack) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る", tint = TextPrimary)
@@ -194,18 +196,18 @@ private fun MissionTopBar(
             text = "ミッション計画",
             color = TextPrimary,
             fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
         Spacer(modifier = Modifier.weight(1f))
         Surface(
             shape = RoundedCornerShape(12.dp),
-            color = statusColor.copy(alpha = 0.2f)
+            color = statusColor.copy(alpha = 0.2f),
         ) {
             Text(
                 text = statusLabel,
                 color = statusColor,
                 fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
@@ -217,17 +219,21 @@ private fun MissionTopBar(
 // ============================================================
 
 @Composable
-private fun MissionProgressBar(currentIndex: Int, total: Int) {
+private fun MissionProgressBar(
+    currentIndex: Int,
+    total: Int,
+) {
     val progress = if (total > 0) currentIndex.toFloat() / total.toFloat() else 0f
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(CardBg)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(CardBg)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text("ウェイポイント進捗", color = TextSecondary, fontSize = 12.sp)
             Text("$currentIndex / $total", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -237,7 +243,7 @@ private fun MissionProgressBar(currentIndex: Int, total: Int) {
             progress = { progress },
             modifier = Modifier.fillMaxWidth(),
             color = AccentGreen,
-            trackColor = Color(0xFF374151)
+            trackColor = Color(0xFF374151),
         )
     }
 }
@@ -254,23 +260,24 @@ private fun MissionCommandButtons(
     onUpload: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
-    onPause: () -> Unit
+    onPause: () -> Unit,
 ) {
     val isLoading = commandStatus is RunStatus.Loading
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(CardBg)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(CardBg)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // 送信ボタン
         Button(
             onClick = onUpload,
             enabled = hasWaypoints && !isLoading && missionStatus != MissionStatus.Running,
             colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         ) {
             if (isLoading && missionStatus == MissionStatus.Uploading) {
                 CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
@@ -286,7 +293,7 @@ private fun MissionCommandButtons(
             onClick = onStart,
             enabled = !isLoading && missionStatus != MissionStatus.Running,
             colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         ) {
             Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))
@@ -298,7 +305,7 @@ private fun MissionCommandButtons(
             onClick = onPause,
             enabled = !isLoading && missionStatus == MissionStatus.Running,
             colors = ButtonDefaults.buttonColors(containerColor = AccentOrange),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         ) {
             Icon(Icons.Default.Pause, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))
@@ -310,7 +317,7 @@ private fun MissionCommandButtons(
             onClick = onStop,
             enabled = !isLoading && (missionStatus == MissionStatus.Running || missionStatus == MissionStatus.Paused),
             colors = ButtonDefaults.buttonColors(containerColor = AccentRed),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         ) {
             Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))
@@ -328,15 +335,16 @@ private fun WaypointList(
     waypoints: List<MissionItem>,
     onEdit: (Int) -> Unit,
     onDelete: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("ウェイポイント", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Text("地図をタップして追加", color = TextSecondary, fontSize = 11.sp)
@@ -345,7 +353,7 @@ private fun WaypointList(
         if (waypoints.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text("ウェイポイントなし", color = TextSecondary, fontSize = 13.sp)
             }
@@ -356,7 +364,7 @@ private fun WaypointList(
                         index = index,
                         item = item,
                         onEdit = { onEdit(index) },
-                        onDelete = { onDelete(index) }
+                        onDelete = { onDelete(index) },
                     )
                 }
             }
@@ -373,32 +381,33 @@ private fun WaypointRow(
     index: Int,
     item: MissionItem,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 4.dp),
         shape = RoundedCornerShape(8.dp),
         color = CardBg,
-        onClick = onEdit
+        onClick = onEdit,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // 番号バッジ
             Surface(
                 shape = RoundedCornerShape(6.dp),
                 color = AccentBlue.copy(alpha = 0.2f),
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = "${index + 1}",
                         color = AccentBlue,
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             }
@@ -407,13 +416,13 @@ private fun WaypointRow(
                 Text(
                     text = "${"%.5f".format(item.latitudeDeg)}, ${"%.5f".format(item.longitudeDeg)}",
                     color = TextPrimary,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "高度: ${"%.1f".format(item.altitudeMeters)} m  速度: ${"%.1f".format(item.speedMS)} m/s",
                     color = TextSecondary,
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
                 )
             }
             IconButton(onClick = onDelete) {
@@ -432,7 +441,7 @@ private fun WaypointEditDialog(
     index: Int,
     item: MissionItem,
     onConfirm: (MissionItem) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     var altitudeText by remember { mutableStateOf(item.altitudeMeters.toString()) }
     var speedText by remember { mutableStateOf(item.speedMS.toString()) }
@@ -447,33 +456,35 @@ private fun WaypointEditDialog(
                 Text(
                     text = "${"%.5f".format(item.latitudeDeg)}, ${"%.5f".format(item.longitudeDeg)}",
                     color = TextSecondary,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
                 )
                 OutlinedTextField(
                     value = altitudeText,
                     onValueChange = { altitudeText = it },
                     label = { Text("高度 (m)", color = TextSecondary) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = AccentBlue,
-                        unfocusedBorderColor = TextSecondary
-                    ),
-                    singleLine = true
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedBorderColor = AccentBlue,
+                            unfocusedBorderColor = TextSecondary,
+                        ),
+                    singleLine = true,
                 )
                 OutlinedTextField(
                     value = speedText,
                     onValueChange = { speedText = it },
                     label = { Text("速度 (m/s)", color = TextSecondary) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = AccentBlue,
-                        unfocusedBorderColor = TextSecondary
-                    ),
-                    singleLine = true
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedBorderColor = AccentBlue,
+                            unfocusedBorderColor = TextSecondary,
+                        ),
+                    singleLine = true,
                 )
             }
         },
@@ -483,7 +494,7 @@ private fun WaypointEditDialog(
                     val altitude = altitudeText.toFloatOrNull() ?: item.altitudeMeters
                     val speed = speedText.toFloatOrNull() ?: item.speedMS
                     onConfirm(item.copy(altitudeMeters = altitude, speedMS = speed))
-                }
+                },
             ) {
                 Text("保存", color = AccentBlue)
             }
@@ -493,7 +504,7 @@ private fun WaypointEditDialog(
                 Text("キャンセル", color = TextSecondary)
             }
         },
-        containerColor = CardBg
+        containerColor = CardBg,
     )
 }
 
@@ -506,6 +517,6 @@ private fun WaypointEditDialog(
 private fun MissionPlanningScreenPreview() {
     MissionPlanningScreen(
         onBack = {},
-        viewModel = MockMissionPlanningViewModel()
+        viewModel = MockMissionPlanningViewModel(),
     )
 }
