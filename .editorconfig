@@ -17,3 +17,7 @@ ktlint_standard_backing-property-naming = disabled
 ktlint_standard_property-naming = disabled
 ktlint_standard_filename = disabled
 ktlint_function_naming_ignore_when_annotated_with = Composable
+
+[{composeApp/build/**/*.kt,composeApp/build/**/*.kts}]
+ktlint_standard_class-naming = disabled
+ktlint_standard_function-naming = disabled
