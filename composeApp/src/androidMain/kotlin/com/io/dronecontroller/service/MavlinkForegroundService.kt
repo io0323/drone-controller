@@ -7,8 +7,10 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.Binder
 import android.os.IBinder
 import com.io.dronecontroller.MainActivity
+import com.io.dronecontroller.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,6 +19,11 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class MavlinkForegroundService : Service() {
+    inner class LocalBinder : Binder() {
+        fun getService(): MavlinkForegroundService = this@MavlinkForegroundService
+    }
+
+    private val binder = LocalBinder()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val droneStateHolder: DroneStateHolder by inject()
     private lateinit var notificationManager: NotificationManager
@@ -41,7 +48,7 @@ class MavlinkForegroundService : Service() {
         return START_STICKY
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
+    override fun onBind(intent: Intent?): IBinder = binder
 
     override fun onDestroy() {
         scope.cancel()
@@ -72,11 +79,11 @@ class MavlinkForegroundService : Service() {
         val connectionText = if (state.isConnected) "接続中" else "切断"
         val batteryText = if (state.isConnected) "バッテリー: ${state.batteryPercent}%" else "--"
 
-        return android.app.Notification
+        return Notification
             .Builder(this, CHANNEL_ID)
             .setContentTitle("ドローンコントローラー: $connectionText")
             .setContentText(batteryText)
-            .setSmallIcon(android.R.drawable.ic_menu_compass)
+            .setSmallIcon(R.drawable.ic_drone)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()
@@ -84,7 +91,7 @@ class MavlinkForegroundService : Service() {
 
     companion object {
         private const val NOTIFICATION_ID = 1001
-        private const val CHANNEL_ID = "mavlink_connection"
+        const val CHANNEL_ID = "drone_connection"
 
         fun start(context: Context) {
             val intent = Intent(context, MavlinkForegroundService::class.java)
