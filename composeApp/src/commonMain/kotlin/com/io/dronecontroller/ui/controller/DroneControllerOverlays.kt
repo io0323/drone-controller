@@ -84,6 +84,7 @@ fun StatusChips(
     batteryPercent: Int = 0,
     satelliteCount: Int = 0,
     isConnected: Boolean = false,
+    isReconnecting: Boolean = false,
     bleConnectionStatus: BleConnectionStatus = BleConnectionStatus.Disconnected,
 ) {
     val batteryTint =
@@ -106,8 +107,16 @@ fun StatusChips(
     ) {
         StatusChip(
             icon = Icons.Default.SignalCellularAlt,
-            label = if (isConnected) "HD" else "--",
-            iconTint = if (isConnected) GreenAccent else Color.Gray,
+            label = when {
+                isReconnecting -> "再接続中"
+                isConnected -> "HD"
+                else -> "--"
+            },
+            iconTint = when {
+                isReconnecting -> OrangeAccent
+                isConnected -> GreenAccent
+                else -> Color.Gray
+            },
         )
         StatusChip(
             icon = Icons.Default.Battery6Bar,
