@@ -44,10 +44,11 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun DroneControllerScreen(
     onNavigateToMission: (lat: Double, lng: Double) -> Unit = { _, _ -> },
+    onStopService: () -> Unit = {},
     viewModel: DroneControllerViewModelContract = koinViewModel<DroneControllerViewModel>(),
-) {
+) {{}
     val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.startObserving()
@@ -55,7 +56,7 @@ fun DroneControllerScreen(
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+            snackBarHostState.showSnackbar(message)
             viewModel.clearError()
         }
     }
@@ -200,7 +201,7 @@ fun DroneControllerScreen(
 
         // ─── エラー Snackbar ─────────────────────────────────────
         SnackbarHost(
-            hostState = snackbarHostState,
+            hostState = snackBarHostState,
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 64.dp),
             snackbar = { data ->
                 Snackbar(
@@ -313,18 +314,4 @@ fun ScreenGridOverlay() {
         drawLine(lineColor, Offset(0f, size.height / 3f), Offset(size.width, size.height / 3f), sw)
         drawLine(lineColor, Offset(0f, size.height * 2f / 3f), Offset(size.width, size.height * 2f / 3f), sw)
     }
-}
-
-// ============================================================
-// Preview
-// ============================================================
-
-@androidx.compose.ui.tooling.preview.Preview(
-    showBackground = true,
-    widthDp = 390,
-    heightDp = 844,
-)
-@Composable
-private fun DroneControllerScreenPreview() {
-    DroneControllerScreen(viewModel = MockDroneControllerViewModel())
 }

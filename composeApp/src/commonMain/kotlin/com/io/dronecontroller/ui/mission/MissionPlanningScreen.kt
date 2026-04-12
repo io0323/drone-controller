@@ -413,17 +413,17 @@ private fun WaypointRow(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "${"%.5f".format(item.latitudeDeg)}, ${"%.5f".format(item.longitudeDeg)}",
-                    color = TextPrimary,
-                    fontSize = 12.sp,
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "高度: ${"%.1f".format(item.altitudeMeters)} m  速度: ${"%.1f".format(item.speedMS)} m/s",
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                )
+//                Text(
+//                    text = "${"%.5f".format(item.latitudeDeg)}, ${"%.5f".format(item.longitudeDeg)}",
+//                    color = TextPrimary,
+//                    fontSize = 12.sp,
+//                )
+//                Spacer(modifier = Modifier.height(2.dp))
+//                Text(
+//                    text = "高度: ${"%.1f".format(item.altitudeMeters)} m  速度: ${"%.1f".format(item.speedMS)} m/s",
+//                    color = TextSecondary,
+//                    fontSize = 11.sp,
+//                )
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "削除", tint = AccentRed, modifier = Modifier.size(20.dp))
@@ -453,11 +453,11 @@ private fun WaypointEditDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "${"%.5f".format(item.latitudeDeg)}, ${"%.5f".format(item.longitudeDeg)}",
-                    color = TextSecondary,
-                    fontSize = 12.sp,
-                )
+//                Text(
+//                    text = "${"%.5f".format(item.latitudeDeg)}, ${"%.5f".format(item.longitudeDeg)}",
+//                    color = TextSecondary,
+//                    fontSize = 12.sp,
+//                )
                 OutlinedTextField(
                     value = altitudeText,
                     onValueChange = { altitudeText = it },

@@ -22,9 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.io.dronecontroller.domain.model.ConnectionStatus
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Clock
 
 @Composable
-fun ConnectionScreen(viewModel: ConnectionViewModelContract = koinViewModel<ConnectionViewModel>()) {
+fun ConnectionScreen(
+    onConnected: () -> Unit,
+    onMock: () -> Unit = {},
+    viewModel: ConnectionViewModelContract = koinViewModel<ConnectionViewModel>()) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.status) {
@@ -36,10 +40,13 @@ fun ConnectionScreen(viewModel: ConnectionViewModelContract = koinViewModel<Conn
     ConnectionContent(
         uiState = uiState,
         onConnect = {
-            onStartService()
             viewModel.connect()
         },
         onDisconnect = viewModel::disconnect,
+        onMock = {
+            viewModel.mock()
+            onMock()
+        },
         onAddressChange = viewModel::updateAddress,
         onPortChange = { viewModel.updatePort(it.toIntOrNull() ?: 50051) },
     )
@@ -50,6 +57,7 @@ private fun ConnectionContent(
     uiState: ConnectionUiState,
     onConnect: () -> Unit,
     onDisconnect: () -> Unit,
+    onMock: () -> Unit,
     onAddressChange: (String) -> Unit,
     onPortChange: (String) -> Unit,
 ) {
@@ -97,9 +105,7 @@ private fun ConnectionContent(
             ) {
                 Text("接続")
             }
-
             Spacer(modifier = Modifier.width(16.dp))
-
             Button(
                 onClick = onDisconnect,
                 enabled =
@@ -108,10 +114,15 @@ private fun ConnectionContent(
             ) {
                 Text("切断")
             }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(
+                onClick = onMock,
+                enabled = true,
+            ) {
+                Text("モック")
+            }
         }
-
         Spacer(modifier = Modifier.height(24.dp))
-
         StatusDisplay(status = uiState.status)
     }
 }
@@ -130,21 +141,4 @@ private fun StatusDisplay(status: ConnectionStatus) {
         style = MaterialTheme.typography.bodyLarge,
         color = color,
     )
-}
-
-@androidx.compose.ui.tooling.preview.Preview
-@Composable
-private fun ConnectionScreenPreview() {
-    MaterialTheme {
-        ConnectionContent(
-            uiState =
-                ConnectionUiState(
-                    status = ConnectionStatus.Connected(lastHeartbeatAt = 0L),
-                ),
-            onConnect = {},
-            onDisconnect = {},
-            onAddressChange = {},
-            onPortChange = {},
-        )
-    }
 }

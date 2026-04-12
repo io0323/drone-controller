@@ -9,6 +9,8 @@ interface ConnectionViewModelContract {
 
     fun disconnect()
 
+    fun mock()
+
     fun updateAddress(address: String)
 
     fun updatePort(port: Int)
