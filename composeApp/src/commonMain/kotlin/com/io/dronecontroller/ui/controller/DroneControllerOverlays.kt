@@ -342,14 +342,6 @@ fun CenterTargetMarker(modifier: Modifier = Modifier) {
 // CameraActionButtons — 下中央カメラ操作
 // ============================================================
 
-/**
- * 画面下中央のカメラ操作ボタン群
- *
- * @param leftX  左ジョイスティックX値（-1.0〜1.0）
- * @param leftY  左ジョイスティックY値（-1.0〜1.0）
- * @param rightX 右ジョイスティックX値（-1.0〜1.0）
- * @param rightY 右ジョイスティックY値（-1.0〜1.0）
- */
 @Composable
 fun CameraActionButtons(
     modifier: Modifier = Modifier,
@@ -357,6 +349,11 @@ fun CameraActionButtons(
     leftY: Float = 0f,
     rightX: Float = 0f,
     rightY: Float = 0f,
+    isConnected: Boolean = false,
+    isCapturingPhoto: Boolean = false,
+    isRecording: Boolean = false,
+    onCapturePhoto: () -> Unit = {},
+    onToggleRecording: () -> Unit = {},
 ) {
     Column(
         modifier = modifier,
@@ -371,14 +368,28 @@ fun CameraActionButtons(
                     .shadow(elevation = 6.dp, shape = CircleShape)
                     .size(60.dp)
                     .clip(CircleShape)
-                    .background(Color.White),
+                    .background(if (isConnected && !isCapturingPhoto) Color.White else Color(0xFF888888))
+                    .then(
+                        if (isConnected && !isCapturingPhoto) {
+                            Modifier
+                        } else {
+                            Modifier
+                        },
+                    ),
         ) {
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = "撮影",
-                modifier = Modifier.size(26.dp),
-                tint = Color(0xFF1A1A2E),
-            )
+            IconButton(
+                onClick = onCapturePhoto,
+//                enabled = isConnected && !isCapturingPhoto,
+                // Mock
+                enabled = true,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = "撮影",
+                    modifier = Modifier.size(26.dp),
+                    tint = if (isConnected && !isCapturingPhoto) Color(0xFF1A1A2E) else Color.White.copy(alpha = 0.4f),
+                )
+            }
         }
 
         // ジョイスティック座標バッジ
@@ -389,7 +400,6 @@ fun CameraActionButtons(
             Column(
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
             ) {
-                // 左右の値を2行で表示
                 Text(
                     text = "左: X: ${"%.2f".format(leftX)}, Y: ${"%.2f".format(leftY)}",
                     color = Color.White.copy(alpha = 0.9f),
@@ -416,14 +426,22 @@ fun CameraActionButtons(
                     .shadow(elevation = 4.dp, shape = CircleShape)
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color.White),
+                    .background(if (isRecording) Color(0xFFDC2626) else if (isConnected) Color.White else Color(0xFF888888)),
+//                    .background(Color(0xFFDC2626)), //Mock
         ) {
-            Icon(
-                imageVector = Icons.Default.Videocam,
-                contentDescription = "動画",
-                modifier = Modifier.size(22.dp),
-                tint = Color(0xFF1A1A2E),
-            )
+            IconButton(
+                onClick = onToggleRecording,
+//                enabled = isConnected,
+                // Mock
+                enabled = true,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Videocam,
+                    contentDescription = "動画",
+                    modifier = Modifier.size(22.dp),
+                    tint = if (isRecording || !isConnected) Color.White.copy(alpha = if (isConnected) 1f else 0.4f) else Color(0xFF1A1A2E),
+                )
+            }
         }
     }
 }
@@ -589,5 +607,11 @@ private fun FlightInfoPanelPreview() {
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF1A2024)
 @Composable
 private fun CameraActionButtonsPreview() {
-    CameraActionButtons(leftX = 0.35f, leftY = -0.12f, rightX = 0.0f, rightY = 0.0f)
+    CameraActionButtons(leftX = 0.35f, leftY = -0.12f, rightX = 0.0f, rightY = 0.0f, isConnected = true)
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF1A2024)
+@Composable
+private fun CameraActionButtonsRecordingPreview() {
+    CameraActionButtons(leftX = 0f, leftY = 0f, rightX = 0f, rightY = 0f, isConnected = true, isRecording = true)
 }

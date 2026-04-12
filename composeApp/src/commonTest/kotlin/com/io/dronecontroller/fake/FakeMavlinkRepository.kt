@@ -11,6 +11,9 @@ class FakeMavlinkRepository : MavlinkRepositoryContract {
     var takeoffResult: RunStatus<Unit> = RunStatus.Success(Unit)
     var landResult: RunStatus<Unit> = RunStatus.Success(Unit)
     var returnToLaunchResult: RunStatus<Unit> = RunStatus.Success(Unit)
+    var capturePhotoResult: RunStatus<Unit> = RunStatus.Success(Unit)
+    var startVideoResult: RunStatus<Unit> = RunStatus.Success(Unit)
+    var stopVideoResult: RunStatus<Unit> = RunStatus.Success(Unit)
 
     val droneStateFlow = MutableSharedFlow<DroneState>(replay = 1)
     val connectionFlow = MutableSharedFlow<ConnectionStatus>()
@@ -24,6 +27,10 @@ class FakeMavlinkRepository : MavlinkRepositoryContract {
     var lastManualControlRoll: Float? = null
     var lastManualControlThrottle: Float? = null
     var lastManualControlYaw: Float? = null
+
+    var capturePhotoCalled = false
+    var startVideoCalled = false
+    var stopVideoCalled = false
 
     override fun observeConnection(
         address: String,
@@ -48,6 +55,21 @@ class FakeMavlinkRepository : MavlinkRepositoryContract {
     override suspend fun land(): RunStatus<Unit> = landResult
 
     override suspend fun returnToLaunch(): RunStatus<Unit> = returnToLaunchResult
+
+    override suspend fun capturePhoto(): RunStatus<Unit> {
+        capturePhotoCalled = true
+        return capturePhotoResult
+    }
+
+    override suspend fun startVideo(): RunStatus<Unit> {
+        startVideoCalled = true
+        return startVideoResult
+    }
+
+    override suspend fun stopVideo(): RunStatus<Unit> {
+        stopVideoCalled = true
+        return stopVideoResult
+    }
 
     override fun sendManualControl(
         pitch: Float,

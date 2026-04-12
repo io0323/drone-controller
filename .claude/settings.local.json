@@ -8,7 +8,10 @@
       "Bash(jar tf:*)",
       "Bash(javap:*)",
       "Bash(grep \"\\\\.class$\")",
-      "Bash(./gradlew :composeApp:testDebugUnitTest --no-configuration-cache)"
+      "Bash(./gradlew :composeApp:testDebugUnitTest --no-configuration-cache)",
+      "Bash(grep \"io/mavsdk/camera/Camera.class\\\\|io/mavsdk/camera/Camera\\\\$\")",
+      "Read(//private/tmp/**)",
+      "Bash(jar xf:*)"
     ]
   }
 }

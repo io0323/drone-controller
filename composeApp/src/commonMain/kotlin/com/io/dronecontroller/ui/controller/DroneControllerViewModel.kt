@@ -6,11 +6,14 @@ import com.io.dronecontroller.domain.model.BleConnectionStatus
 import com.io.dronecontroller.domain.model.BleControllerState
 import com.io.dronecontroller.domain.model.ConnectionStatus
 import com.io.dronecontroller.domain.model.RunStatus
+import com.io.dronecontroller.domain.usecase.CapturePhotoUseCaseContract
 import com.io.dronecontroller.domain.usecase.LandUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveBleControllerStateUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveDroneStateUseCaseContract
 import com.io.dronecontroller.domain.usecase.ReturnToLaunchUseCaseContract
 import com.io.dronecontroller.domain.usecase.SendManualControlUseCaseContract
+import com.io.dronecontroller.domain.usecase.StartVideoUseCaseContract
+import com.io.dronecontroller.domain.usecase.StopVideoUseCaseContract
 import com.io.dronecontroller.domain.usecase.TakeoffUseCaseContract
 import com.io.dronecontroller.service.DroneStateHolder
 import kotlinx.coroutines.Job
@@ -29,6 +32,9 @@ class DroneControllerViewModel(
     private val sendManualControl: SendManualControlUseCaseContract,
     private val observeBleControllerState: ObserveBleControllerStateUseCaseContract,
     private val droneStateHolder: DroneStateHolder,
+    private val capturePhotoUseCase: CapturePhotoUseCaseContract,
+    private val startVideoUseCase: StartVideoUseCaseContract,
+    private val stopVideoUseCase: StopVideoUseCaseContract,
 ) : ViewModel(),
     DroneControllerViewModelContract {
     private val _uiState = MutableStateFlow(DroneControllerUiState())
@@ -214,5 +220,43 @@ class DroneControllerViewModel(
 
     override fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    override fun capturePhoto() {
+        if (_uiState.value.isCapturingPhoto) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isCapturingPhoto = true, errorMessage = null) }
+            val result = capturePhotoUseCase()
+            _uiState.update {
+                it.copy(
+                    isCapturingPhoto = false,
+                    errorMessage = (result as? RunStatus.Error)?.message,
+                )
+            }
+        }
+    }
+
+    override fun toggleRecording() {
+        val isRecording = _uiState.value.isRecording
+        viewModelScope.launch {
+            if (isRecording) {
+                val result = stopVideoUseCase()
+                _uiState.update {
+                    it.copy(
+                        isRecording = false,
+                        errorMessage = (result as? RunStatus.Error)?.message,
+                    )
+                }
+            } else {
+                val result = startVideoUseCase()
+                if (result is RunStatus.Success) {
+                    _uiState.update { it.copy(isRecording = true) }
+                } else {
+                    _uiState.update {
+                        it.copy(errorMessage = (result as? RunStatus.Error)?.message)
+                    }
+                }
+            }
+        }
     }
 }

@@ -30,4 +30,10 @@ interface MavlinkDataSourceContract {
         throttle: Float,
         yaw: Float,
     )
+
+    suspend fun capturePhoto(): RunStatus<Unit>
+
+    suspend fun startVideo(): RunStatus<Unit>
+
+    suspend fun stopVideo(): RunStatus<Unit>
 }

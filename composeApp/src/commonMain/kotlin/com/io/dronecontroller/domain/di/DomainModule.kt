@@ -30,6 +30,12 @@ import com.io.dronecontroller.domain.usecase.StopMissionUseCase
 import com.io.dronecontroller.domain.usecase.StopMissionUseCaseContract
 import com.io.dronecontroller.domain.usecase.TakeoffUseCase
 import com.io.dronecontroller.domain.usecase.TakeoffUseCaseContract
+import com.io.dronecontroller.domain.usecase.CapturePhotoUseCase
+import com.io.dronecontroller.domain.usecase.CapturePhotoUseCaseContract
+import com.io.dronecontroller.domain.usecase.StartVideoUseCase
+import com.io.dronecontroller.domain.usecase.StartVideoUseCaseContract
+import com.io.dronecontroller.domain.usecase.StopVideoUseCase
+import com.io.dronecontroller.domain.usecase.StopVideoUseCaseContract
 import com.io.dronecontroller.domain.usecase.UploadMissionUseCase
 import com.io.dronecontroller.domain.usecase.UploadMissionUseCaseContract
 import org.koin.core.module.Module
@@ -53,4 +59,7 @@ val useCaseModule: Module =
         single<StopMissionUseCaseContract> { StopMissionUseCase(get()) }
         single<PauseMissionUseCaseContract> { PauseMissionUseCase(get()) }
         single<ObserveMissionProgressUseCaseContract> { ObserveMissionProgressUseCase(get()) }
+        single<CapturePhotoUseCaseContract> { CapturePhotoUseCase(get()) }
+        single<StartVideoUseCaseContract> { StartVideoUseCase(get()) }
+        single<StopVideoUseCaseContract> { StopVideoUseCase(get()) }
     }

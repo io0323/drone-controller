@@ -34,4 +34,10 @@ class MavlinkRepository(
         throttle: Float,
         yaw: Float,
     ) = dataSource.sendManualControl(pitch, roll, throttle, yaw)
+
+    override suspend fun capturePhoto(): RunStatus<Unit> = dataSource.capturePhoto()
+
+    override suspend fun startVideo(): RunStatus<Unit> = dataSource.startVideo()
+
+    override suspend fun stopVideo(): RunStatus<Unit> = dataSource.stopVideo()
 }
