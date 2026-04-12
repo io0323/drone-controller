@@ -245,9 +245,11 @@ fun TopRightActionButtons(
     modifier: Modifier = Modifier,
     isMapMode: Boolean = false,
     isBleConnected: Boolean = false,
+    isConnected: Boolean = false,
     onToggleMap: () -> Unit = {},
     onOpenBleSettings: () -> Unit = {},
     onOpenMission: () -> Unit = {},
+    onReturnToLaunch: () -> Unit = {},
 ) {
     Column(
         modifier = modifier,
@@ -263,6 +265,8 @@ fun TopRightActionButtons(
         ActionCircleButton(
             icon = Icons.Default.Home,
             contentDescription = "ホーム",
+            enabled = isConnected,
+            onClick = onReturnToLaunch,
         )
         ActionCircleButton(
             icon = if (isMapMode) Icons.Default.Navigation else Icons.Default.Map,
@@ -285,6 +289,7 @@ private fun ActionCircleButton(
     icon: ImageVector,
     contentDescription: String,
     tint: Color = Color.White,
+    enabled: Boolean = true,
     onClick: () -> Unit = {},
 ) {
     Box(
@@ -295,12 +300,12 @@ private fun ActionCircleButton(
                 .clip(CircleShape)
                 .background(ChipBg),
     ) {
-        IconButton(onClick = onClick) {
+        IconButton(onClick = onClick, enabled = enabled) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
                 modifier = Modifier.size(18.dp),
-                tint = tint,
+                tint = if (enabled) tint else tint.copy(alpha = 0.3f),
             )
         }
     }

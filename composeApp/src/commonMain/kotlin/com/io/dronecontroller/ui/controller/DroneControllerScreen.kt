@@ -1,6 +1,10 @@
 package com.io.dronecontroller.ui.controller
 
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
@@ -49,7 +53,7 @@ fun DroneControllerScreen(
     onNavigateToMission: (lat: Double, lng: Double) -> Unit = { _, _ -> },
     onStopService: () -> Unit = {},
     viewModel: DroneControllerViewModelContract = koinViewModel<DroneControllerViewModel>(),
-) {{}
+) {
     val uiState by viewModel.uiState.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
 
@@ -71,6 +75,13 @@ fun DroneControllerScreen(
             flashAlpha.animateTo(0f, animationSpec = tween(300))
         }
     }
+
+    val infiniteTransition = rememberInfiniteTransition()
+    val rtlBorderColor by infiniteTransition.animateColor(
+        initialValue = Color(0xFF00BFFF),
+        targetValue = Color(0xFF0080FF),
+        animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse),
+    )
 
     var showBleSettings by remember { mutableStateOf(false) }
 
@@ -128,9 +139,11 @@ fun DroneControllerScreen(
                     .padding(end = 12.dp, top = 14.dp),
             isMapMode = uiState.isMapMode,
             isBleConnected = isBleConnected,
+            isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
             onToggleMap = { viewModel.toggleMapMode() },
             onOpenBleSettings = { showBleSettings = true },
             onOpenMission = { onNavigateToMission(uiState.latitude, uiState.longitude) },
+            onReturnToLaunch = { viewModel.returnToLaunch() },
         )
 
         // ─── 中央ターゲットマーカー ──────────────────────────────
@@ -222,6 +235,16 @@ fun DroneControllerScreen(
                     Modifier
                         .fillMaxSize()
                         .border(width = 4.dp, color = Color(0xCCDC2626)),
+            )
+        }
+
+        // ─── 自動帰還中: 青枠パルス ──────────────────────────────
+        if (uiState.isReturningToLaunch) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .border(width = 4.dp, color = rtlBorderColor),
             )
         }
 

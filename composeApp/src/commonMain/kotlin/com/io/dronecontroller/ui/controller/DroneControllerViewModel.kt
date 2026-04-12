@@ -81,8 +81,8 @@ class DroneControllerViewModel(
                         }
 
                         previousConnectionStatus = state.connectionStatus
-                        _uiState.update {
-                            it.copy(
+                        _uiState.update { current ->
+                            current.copy(
                                 altitudeMeters = state.altitudeMeters,
                                 batteryPercent = state.batteryPercent,
                                 speedKmh = state.speedKmh,
@@ -92,6 +92,7 @@ class DroneControllerViewModel(
                                 latitude = state.latitude,
                                 longitude = state.longitude,
                                 bearing = state.bearing,
+                                isReturningToLaunch = current.isReturningToLaunch && state.isArmed,
                             )
                         }
                         droneStateHolder.update(
@@ -131,13 +132,13 @@ class DroneControllerViewModel(
     private fun handleUnexpectedDisconnect() {
         if (reconnectCount >= 3) {
             _uiState.update {
-                it.copy(isReconnecting = false, errorMessage = "接続が切断されました。再接続に失敗しました")
+                it.copy(isReconnecting = false, isReturningToLaunch = false, errorMessage = "接続が切断されました。再接続に失敗しました")
             }
             return
         }
         reconnectCount++
         _uiState.update {
-            it.copy(isReconnecting = true, errorMessage = "接続断。再接続中… ($reconnectCount/3)")
+            it.copy(isReconnecting = true, isReturningToLaunch = false, errorMessage = "接続断。再接続中… ($reconnectCount/3)")
         }
         viewModelScope.launch {
             observingJob?.cancel()
@@ -209,6 +210,7 @@ class DroneControllerViewModel(
                 it.copy(
                     commandStatus = result,
                     errorMessage = (result as? RunStatus.Error)?.message,
+                    isReturningToLaunch = result is RunStatus.Success,
                 )
             }
         }
