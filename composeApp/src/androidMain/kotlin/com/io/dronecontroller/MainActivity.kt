@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
@@ -34,10 +35,15 @@ class MainActivity : ComponentActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-
         setContent {
-            App(onStartService = ::startMavlinkService)
+            App(onStartService = {
+                ContextCompat.startForegroundService(
+                    this,
+                    Intent(this, MavlinkForegroundService::class.java),
+                )
+            })
         }
     }
 
@@ -61,10 +67,6 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         MavlinkForegroundService.stop(this)
         super.onDestroy()
-    }
-
-    private fun startMavlinkService() {
-        MavlinkForegroundService.start(this)
     }
 }
 
