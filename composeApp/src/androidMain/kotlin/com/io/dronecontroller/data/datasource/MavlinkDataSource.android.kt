@@ -183,6 +183,12 @@ class MavlinkDataSource(
         // TODO: io.mavsdk バージョンに合わせて実装
     }
 
+    override suspend fun capturePhoto(): RunStatus<Unit> = withRetry { executeCapturePhoto() }
+
+    override suspend fun startVideo(): RunStatus<Unit> = withRetry { executeStartVideo() }
+
+    override suspend fun stopVideo(): RunStatus<Unit> = withRetry { executeStopVideo() }
+
     // ─── プライベートヘルパー ─────────────────────────────────────
 
     private suspend fun executeTakeoff(altitudeMeters: Float): RunStatus<Unit> {
@@ -216,6 +222,42 @@ class MavlinkDataSource(
                 system.action.returnToLaunch().subscribe(
                     { cont.resume(RunStatus.Success(Unit)) },
                     { e -> cont.resume(RunStatus.Error(e.message ?: "RTLコマンド失敗", e)) },
+                )
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
+    }
+
+    private suspend fun executeCapturePhoto(): RunStatus<Unit> {
+        val system = droneProvider.drone ?: return RunStatus.Error("未接続")
+        return suspendCancellableCoroutine { cont ->
+            val disposable =
+                system.camera.takePhoto(1).subscribe(
+                    { cont.resume(RunStatus.Success(Unit)) },
+                    { e -> cont.resume(RunStatus.Error(e.message ?: "撮影コマンド失敗", e)) },
+                )
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
+    }
+
+    private suspend fun executeStartVideo(): RunStatus<Unit> {
+        val system = droneProvider.drone ?: return RunStatus.Error("未接続")
+        return suspendCancellableCoroutine { cont ->
+            val disposable =
+                system.camera.startVideo(1).subscribe(
+                    { cont.resume(RunStatus.Success(Unit)) },
+                    { e -> cont.resume(RunStatus.Error(e.message ?: "録画開始コマンド失敗", e)) },
+                )
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
+    }
+
+    private suspend fun executeStopVideo(): RunStatus<Unit> {
+        val system = droneProvider.drone ?: return RunStatus.Error("未接続")
+        return suspendCancellableCoroutine { cont ->
+            val disposable =
+                system.camera.stopVideo(1).subscribe(
+                    { cont.resume(RunStatus.Success(Unit)) },
+                    { e -> cont.resume(RunStatus.Error(e.message ?: "録画停止コマンド失敗", e)) },
                 )
             cont.invokeOnCancellation { disposable.dispose() }
         }

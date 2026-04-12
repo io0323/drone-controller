@@ -1,6 +1,9 @@
 package com.io.dronecontroller.ui.controller
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -58,6 +61,14 @@ fun DroneControllerScreen(
         uiState.errorMessage?.let { message ->
             snackBarHostState.showSnackbar(message)
             viewModel.clearError()
+        }
+    }
+
+    val flashAlpha = remember { Animatable(0f) }
+    LaunchedEffect(uiState.isCapturingPhoto) {
+        if (uiState.isCapturingPhoto) {
+            flashAlpha.snapTo(1f)
+            flashAlpha.animateTo(0f, animationSpec = tween(300))
         }
     }
 
@@ -151,6 +162,11 @@ fun DroneControllerScreen(
             leftY = leftJoystickY,
             rightX = rightJoystickX,
             rightY = rightJoystickY,
+            isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
+            isCapturingPhoto = uiState.isCapturingPhoto,
+            isRecording = uiState.isRecording,
+            onCapturePhoto = { viewModel.capturePhoto() },
+            onToggleRecording = { viewModel.toggleRecording() },
         )
 
         // ─── 左下: 上昇/回転スティック（BLE接続時はグレーアウト） ──
@@ -197,6 +213,26 @@ fun DroneControllerScreen(
         // ─── BLE設定オーバーレイ ─────────────────────────────────
         if (showBleSettings) {
             BleSettingsScreen(onDismiss = { showBleSettings = false })
+        }
+
+        // ─── 録画中: 赤枠 ───────────────────────────────────────
+        if (uiState.isRecording) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .border(width = 4.dp, color = Color(0xCCDC2626)),
+            )
+        }
+
+        // ─── 撮影フラッシュ: 白枠フェードアウト ─────────────────
+        if (flashAlpha.value > 0f) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .border(width = 6.dp, color = Color.White.copy(alpha = flashAlpha.value)),
+            )
         }
 
         // ─── エラー Snackbar ─────────────────────────────────────

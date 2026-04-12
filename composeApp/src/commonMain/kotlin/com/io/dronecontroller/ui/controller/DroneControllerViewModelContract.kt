@@ -28,4 +28,8 @@ interface DroneControllerViewModelContract {
     )
 
     fun clearError()
+
+    fun capturePhoto()
+
+    fun toggleRecording()
 }
