@@ -23,6 +23,7 @@ data class DroneControllerUiState(
     val isReconnecting: Boolean = false,
     val isCapturingPhoto: Boolean = false,
     val isRecording: Boolean = false,
+    val isReturningToLaunch: Boolean = false,
 ) {
     val connectedControllerName: String?
         get() = (bleConnectionStatus as? BleConnectionStatus.Connected)?.device?.name
