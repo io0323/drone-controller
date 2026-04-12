@@ -35,8 +35,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
             implementation(libs.mavsdk)
-            implementation(libs.maps.compose)
-            implementation(libs.play.services.maps)
+            implementation(libs.osmdroid.android)
             // ドローンコントローラーUIで使用するアイコン群
 //            implementation("androidx.compose.material:material-icons-extended:1.7.3")
         }
@@ -86,18 +85,6 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        val localPropsFile = rootProject.file("local.properties")
-        val mapsApiKey =
-            if (localPropsFile.exists()) {
-                localPropsFile
-                    .readLines()
-                    .firstOrNull { it.startsWith("MAPS_API_KEY=") }
-                    ?.removePrefix("MAPS_API_KEY=")
-                    ?.trim() ?: ""
-            } else {
-                ""
-            }
-        manifestPlaceholders["mapsApiKey"] = mapsApiKey
     }
     packaging {
         resources {
