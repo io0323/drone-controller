@@ -39,6 +39,12 @@ class ConnectionViewModel(
         _uiState.update { it.copy(status = ConnectionStatus.Disconnected) }
     }
 
+    override fun mock() {
+        connectionJob?.cancel()
+        connectionJob = null
+        _uiState.update { it.copy(status = ConnectionStatus.Disconnected) }
+    }
+
     override fun updateAddress(address: String) {
         _uiState.update { it.copy(address = address) }
     }
