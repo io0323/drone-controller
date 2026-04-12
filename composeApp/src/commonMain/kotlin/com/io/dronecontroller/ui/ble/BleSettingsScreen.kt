@@ -52,6 +52,7 @@ fun BleSettingsScreen(
     onDismiss: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val requestBlePermission = rememberBlePermissionLauncher { viewModel.startScan() }
 
     // 背景タップで閉じる
     Box(
@@ -142,7 +143,7 @@ fun BleSettingsScreen(
                                     if (uiState.isScanning) {
                                         viewModel.stopScan()
                                     } else {
-                                        viewModel.startScan()
+                                        requestBlePermission()
                                     }
                                 },
                                 colors =
