@@ -27,4 +27,6 @@ data class DroneControllerUiState(
 ) {
     val connectedControllerName: String?
         get() = (bleConnectionStatus as? BleConnectionStatus.Connected)?.device?.name
+    val isBleConnected: Boolean get() = bleConnectionStatus is BleConnectionStatus.Connected
+    val bleDeviceName: String? get() = connectedControllerName
 }

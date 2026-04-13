@@ -8,6 +8,7 @@ import com.io.dronecontroller.domain.model.ConnectionStatus
 import com.io.dronecontroller.domain.model.RunStatus
 import com.io.dronecontroller.domain.usecase.CapturePhotoUseCaseContract
 import com.io.dronecontroller.domain.usecase.LandUseCaseContract
+import com.io.dronecontroller.domain.usecase.ObserveBleConnectionStatusUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveBleControllerStateUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveDroneStateUseCaseContract
 import com.io.dronecontroller.domain.usecase.ReturnToLaunchUseCaseContract
@@ -31,6 +32,7 @@ class DroneControllerViewModel(
     private val returnToLaunchUseCase: ReturnToLaunchUseCaseContract,
     private val sendManualControl: SendManualControlUseCaseContract,
     private val observeBleControllerState: ObserveBleControllerStateUseCaseContract,
+    private val observeBleConnectionStatus: ObserveBleConnectionStatusUseCaseContract,
     private val droneStateHolder: DroneStateHolder,
     private val capturePhotoUseCase: CapturePhotoUseCaseContract,
     private val startVideoUseCase: StartVideoUseCaseContract,
@@ -104,6 +106,11 @@ class DroneControllerViewModel(
                 launch {
                     observeBleControllerState().collect { bleState ->
                         _uiState.update { it.copy(bleControllerState = bleState) }
+                    }
+                }
+                launch {
+                    observeBleConnectionStatus().collect { status ->
+                        _uiState.update { it.copy(bleConnectionStatus = status) }
                     }
                 }
                 launch {
