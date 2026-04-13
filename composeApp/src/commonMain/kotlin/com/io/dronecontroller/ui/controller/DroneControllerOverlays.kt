@@ -1,5 +1,7 @@
 package com.io.dronecontroller.ui.controller
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Battery6Bar
@@ -37,9 +41,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -293,15 +300,19 @@ private fun ActionCircleButton(
     enabled: Boolean = true,
     onClick: () -> Unit = {},
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(targetValue = if (isPressed) 0.85f else 1.0f, animationSpec = tween(100))
     Box(
         contentAlignment = Alignment.Center,
         modifier =
             Modifier
+                .scale(scale)
                 .size(38.dp)
                 .clip(CircleShape)
                 .background(ChipBg),
     ) {
-        IconButton(onClick = onClick, enabled = enabled) {
+        IconButton(onClick = onClick, enabled = enabled, interactionSource = interactionSource) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
@@ -361,6 +372,12 @@ fun CameraActionButtons(
     onCapturePhoto: () -> Unit = {},
     onToggleRecording: () -> Unit = {},
 ) {
+    val photoInteractionSource = remember { MutableInteractionSource() }
+    val isPhotoPressed by photoInteractionSource.collectIsPressedAsState()
+    val photoScale by animateFloatAsState(targetValue = if (isPhotoPressed) 0.85f else 1.0f, animationSpec = tween(100))
+    val videoInteractionSource = remember { MutableInteractionSource() }
+    val isVideoPressed by videoInteractionSource.collectIsPressedAsState()
+    val videoScale by animateFloatAsState(targetValue = if (isVideoPressed) 0.85f else 1.0f, animationSpec = tween(100))
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -371,6 +388,7 @@ fun CameraActionButtons(
             contentAlignment = Alignment.Center,
             modifier =
                 Modifier
+                    .scale(photoScale)
                     .shadow(elevation = 6.dp, shape = CircleShape)
                     .size(60.dp)
                     .clip(CircleShape)
@@ -388,6 +406,7 @@ fun CameraActionButtons(
 //                enabled = isConnected && !isCapturingPhoto,
                 // Mock
                 enabled = true,
+                interactionSource = photoInteractionSource,
             ) {
                 Icon(
                     imageVector = Icons.Default.CameraAlt,
@@ -429,6 +448,7 @@ fun CameraActionButtons(
             contentAlignment = Alignment.Center,
             modifier =
                 Modifier
+                    .scale(videoScale)
                     .shadow(elevation = 4.dp, shape = CircleShape)
                     .size(48.dp)
                     .clip(CircleShape)
@@ -440,6 +460,7 @@ fun CameraActionButtons(
 //                enabled = isConnected,
                 // Mock
                 enabled = true,
+                interactionSource = videoInteractionSource,
             ) {
                 Icon(
                     imageVector = Icons.Default.Videocam,
@@ -537,19 +558,22 @@ fun CommandButtons(
             CommandButton(
                 icon = Icons.Default.KeyboardArrowUp,
                 contentDescription = "離陸",
-                enabled = isConnected && isArmed && !isLoading,
+//                enabled = isConnected && isArmed && !isLoading,
+                enabled = true, // Mock
                 onClick = onTakeoff,
             )
             CommandButton(
                 icon = Icons.Default.KeyboardArrowDown,
                 contentDescription = "着陸",
-                enabled = isConnected && !isLoading,
+//                enabled = isConnected && !isLoading,
+                enabled = true, // Mock
                 onClick = onLand,
             )
             CommandButton(
                 icon = Icons.Default.Undo,
                 contentDescription = "RTL",
-                enabled = isConnected && !isLoading,
+//                enabled = isConnected && !isLoading,
+                enabled = true, // Mock
                 onClick = onReturnToLaunch,
             )
         }
@@ -563,15 +587,19 @@ private fun CommandButton(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(targetValue = if (isPressed) 0.85f else 1.0f, animationSpec = tween(100))
     Box(
         contentAlignment = Alignment.Center,
         modifier =
             Modifier
+                .scale(scale)
                 .size(44.dp)
                 .clip(CircleShape)
                 .background(ChipBg),
     ) {
-        IconButton(onClick = onClick, enabled = enabled) {
+        IconButton(onClick = onClick, enabled = enabled, interactionSource = interactionSource) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
