@@ -29,9 +29,13 @@ class MissionPlanningViewModel(
 
     init {
         viewModelScope.launch {
-            observeMissionProgress().collect { progress ->
-                val status = if (progress.isComplete) MissionStatus.Complete else MissionStatus.Running
-                _uiState.update { it.copy(progress = progress, missionStatus = status) }
+            try {
+                observeMissionProgress().collect { progress ->
+                    val status = if (progress.isComplete) MissionStatus.Complete else MissionStatus.Running
+                    _uiState.update { it.copy(progress = progress, missionStatus = status) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.message ?: "接続エラー") }
             }
         }
     }
