@@ -10,6 +10,7 @@ import com.io.dronecontroller.domain.model.RunStatus
 import com.io.dronecontroller.domain.repository.BleRepositoryContract
 import com.io.dronecontroller.domain.usecase.CapturePhotoUseCase
 import com.io.dronecontroller.domain.usecase.LandUseCase
+import com.io.dronecontroller.domain.usecase.ObserveBleConnectionStatusUseCase
 import com.io.dronecontroller.domain.usecase.ObserveBleControllerStateUseCase
 import com.io.dronecontroller.domain.usecase.ObserveDroneStateUseCase
 import com.io.dronecontroller.domain.usecase.ReturnToLaunchUseCase
@@ -52,11 +53,12 @@ class DroneControllerViewModelTest {
             landUseCase = LandUseCase(mavRepo),
             returnToLaunchUseCase = ReturnToLaunchUseCase(mavRepo),
             sendManualControl = SendManualControlUseCase(mavRepo),
+            observeBleControllerState = ObserveBleControllerStateUseCase(bleRepo),
+            observeBleConnectionStatus = ObserveBleConnectionStatusUseCase(bleRepo),
+            droneStateHolder = DroneStateHolder(),
             capturePhotoUseCase = CapturePhotoUseCase(mavRepo),
             startVideoUseCase = StartVideoUseCase(mavRepo),
             stopVideoUseCase = StopVideoUseCase(mavRepo),
-            observeBleControllerState = ObserveBleControllerStateUseCase(bleRepo),
-            droneStateHolder = DroneStateHolder(),
         )
 
     @BeforeTest

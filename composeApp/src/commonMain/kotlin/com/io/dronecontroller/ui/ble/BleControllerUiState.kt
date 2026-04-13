@@ -8,4 +8,7 @@ data class BleControllerUiState(
     val scannedDevices: List<BleDevice> = emptyList(),
     val isScanning: Boolean = false,
     val errorMessage: String? = null,
-)
+) {
+    val scanResults: List<BleDevice> get() = scannedDevices
+    val connectedDevice: BleDevice? get() = (connectionStatus as? BleConnectionStatus.Connected)?.device
+}
