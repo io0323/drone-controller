@@ -8,7 +8,9 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Snackbar
@@ -151,36 +153,35 @@ fun DroneControllerScreen(
             modifier = Modifier.align(Alignment.Center),
         )
 
-        // ─── 中央: コマンドボタン（離陸・着陸・RTL） ────────────
-        CommandButtons(
-            modifier =
-                Modifier
-                    .align(Alignment.Center)
-                    .padding(top = 80.dp),
-            isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
-            isArmed = uiState.isArmed,
-            commandStatus = uiState.commandStatus,
-            onTakeoff = { viewModel.takeoff() },
-            onLand = { viewModel.land() },
-            onReturnToLaunch = { viewModel.returnToLaunch() },
-        )
-
-        // ─── 下中央カメラボタン（ジョイスティック値を反映） ───────
-        CameraActionButtons(
+        // ─── 下中央: コマンドボタン（上）+ カメラボタン（下） ───
+        Column(
             modifier =
                 Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 28.dp),
-            leftX = leftJoystickX,
-            leftY = leftJoystickY,
-            rightX = rightJoystickX,
-            rightY = rightJoystickY,
-            isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
-            isCapturingPhoto = uiState.isCapturingPhoto,
-            isRecording = uiState.isRecording,
-            onCapturePhoto = { viewModel.capturePhoto() },
-            onToggleRecording = { viewModel.toggleRecording() },
-        )
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            CommandButtons(
+                isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
+                isArmed = uiState.isArmed,
+                commandStatus = uiState.commandStatus,
+                onTakeoff = { viewModel.takeoff() },
+                onLand = { viewModel.land() },
+                onReturnToLaunch = { viewModel.returnToLaunch() },
+            )
+            CameraActionButtons(
+                leftX = leftJoystickX,
+                leftY = leftJoystickY,
+                rightX = rightJoystickX,
+                rightY = rightJoystickY,
+                isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
+                isCapturingPhoto = uiState.isCapturingPhoto,
+                isRecording = uiState.isRecording,
+                onCapturePhoto = { viewModel.capturePhoto() },
+                onToggleRecording = { viewModel.toggleRecording() },
+            )
+        }
 
         // ─── 左下: 上昇/回転スティック（BLE接続時はグレーアウト） ──
         VirtualJoystick(
