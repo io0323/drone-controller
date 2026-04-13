@@ -121,6 +121,7 @@ fun DroneControllerScreen(
             isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
             isReconnecting = uiState.isReconnecting,
             bleConnectionStatus = uiState.bleConnectionStatus,
+            onBack = if (uiState.isMapMode) { { viewModel.toggleMapMode() } } else null,
         )
 
         // ─── 上中央フライト情報 ──────────────────────────────────
