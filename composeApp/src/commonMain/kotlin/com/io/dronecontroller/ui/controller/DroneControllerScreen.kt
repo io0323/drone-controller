@@ -86,6 +86,7 @@ fun DroneControllerScreen(
     )
 
     var showBleSettings by remember { mutableStateOf(false) }
+    var showDroneConnection by remember { mutableStateOf(false) }
 
     // 左右ジョイスティックの値を管理（-1.0〜1.0）
     var leftJoystickX by remember { mutableStateOf(0f) }
@@ -146,7 +147,7 @@ fun DroneControllerScreen(
             onToggleMap = { viewModel.toggleMapMode() },
             onOpenBleSettings = { showBleSettings = true },
             onOpenMission = { onNavigateToMission(uiState.latitude, uiState.longitude) },
-            onReturnToLaunch = { viewModel.returnToLaunch() },
+            onOpenDroneConnection = { showDroneConnection = true },
         )
 
         // ─── 中央ターゲットマーカー ──────────────────────────────
@@ -228,6 +229,22 @@ fun DroneControllerScreen(
         // ─── BLE設定オーバーレイ ─────────────────────────────────
         if (showBleSettings) {
             BleSettingsScreen(onDismiss = { showBleSettings = false })
+        }
+
+        // ─── ドローン接続管理パネル ──────────────────────────────
+        if (showDroneConnection) {
+            DroneConnectionPanel(
+                isConnected = uiState.connectionStatus is ConnectionStatus.Connected,
+                onDismiss = { showDroneConnection = false },
+                onDisconnect = {
+                    viewModel.stopObserving()
+                    showDroneConnection = false
+                },
+                onReconnect = { ip, port ->
+                    viewModel.startObserving(ip, port)
+                    showDroneConnection = false
+                },
+            )
         }
 
         // ─── 録画中: 赤枠 ───────────────────────────────────────
