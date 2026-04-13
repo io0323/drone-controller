@@ -118,6 +118,7 @@ fun MissionPlanningScreen(
             // ─── ウェイポイントリスト（下半分） ──────────────────
             WaypointList(
                 waypoints = uiState.waypoints,
+                currentWaypointIndex = uiState.progress?.currentItemIndex,
                 onEdit = { index -> editingIndex = index },
                 onDelete = { index -> viewModel.removeWaypoint(index) },
                 modifier = Modifier.weight(0.55f),
@@ -342,6 +343,7 @@ private fun MissionCommandButtons(
 @Composable
 private fun WaypointList(
     waypoints: List<MissionItem>,
+    currentWaypointIndex: Int?,
     onEdit: (Int) -> Unit,
     onDelete: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -372,6 +374,7 @@ private fun WaypointList(
                     WaypointRow(
                         index = index,
                         item = item,
+                        isActive = index == currentWaypointIndex,
                         onEdit = { onEdit(index) },
                         onDelete = { onDelete(index) },
                     )
@@ -389,6 +392,7 @@ private fun WaypointList(
 private fun WaypointRow(
     index: Int,
     item: MissionItem,
+    isActive: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -398,7 +402,7 @@ private fun WaypointRow(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 4.dp),
         shape = RoundedCornerShape(8.dp),
-        color = CardBg,
+        color = if (isActive) AccentGreen.copy(alpha = 0.15f) else CardBg,
         onClick = onEdit,
     ) {
         Row(
@@ -406,15 +410,16 @@ private fun WaypointRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // 番号バッジ
+            val badgeColor = if (isActive) AccentGreen else AccentBlue
             Surface(
                 shape = RoundedCornerShape(6.dp),
-                color = AccentBlue.copy(alpha = 0.2f),
+                color = badgeColor.copy(alpha = 0.2f),
                 modifier = Modifier.size(32.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = "${index + 1}",
-                        color = AccentBlue,
+                        color = badgeColor,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                     )
