@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Navigation
@@ -27,9 +29,8 @@ import androidx.compose.material.icons.filled.Satellite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material.icons.filled.Videocam
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -534,21 +535,21 @@ fun CommandButtons(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CommandButton(
-                label = "離陸",
+                icon = Icons.Default.KeyboardArrowUp,
+                contentDescription = "離陸",
                 enabled = isConnected && isArmed && !isLoading,
-                color = Color(0xFF4ADE80),
                 onClick = onTakeoff,
             )
             CommandButton(
-                label = "着陸",
+                icon = Icons.Default.KeyboardArrowDown,
+                contentDescription = "着陸",
                 enabled = isConnected && !isLoading,
-                color = Color(0xFF60A5FA),
                 onClick = onLand,
             )
             CommandButton(
-                label = "RTL",
+                icon = Icons.Default.Undo,
+                contentDescription = "RTL",
                 enabled = isConnected && !isLoading,
-                color = Color(0xFFFB923C),
                 onClick = onReturnToLaunch,
             )
         }
@@ -557,27 +558,27 @@ fun CommandButtons(
 
 @Composable
 private fun CommandButton(
-    label: String,
+    icon: ImageVector,
+    contentDescription: String,
     enabled: Boolean,
-    color: Color,
     onClick: () -> Unit,
 ) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = color.copy(alpha = 0.85f),
-                disabledContainerColor = Color(0x55888888),
-            ),
-        modifier = Modifier.height(34.dp),
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier =
+            Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(ChipBg),
     ) {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (enabled) Color.Black else Color.White.copy(alpha = 0.4f),
-        )
+        IconButton(onClick = onClick, enabled = enabled) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                modifier = Modifier.size(22.dp),
+                tint = if (enabled) Color.White else Color.White.copy(alpha = 0.3f),
+            )
+        }
     }
 }
 
