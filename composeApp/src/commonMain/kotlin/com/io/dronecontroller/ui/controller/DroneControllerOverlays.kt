@@ -18,6 +18,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Battery6Bar
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothConnected
@@ -94,6 +95,7 @@ fun StatusChips(
     isConnected: Boolean = false,
     isReconnecting: Boolean = false,
     bleConnectionStatus: BleConnectionStatus = BleConnectionStatus.Disconnected,
+    onBack: (() -> Unit)? = null,
 ) {
     val batteryTint =
         when {
@@ -113,6 +115,24 @@ fun StatusChips(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
+        if (onBack != null) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(ChipBg),
+                contentAlignment = Alignment.Center,
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "戻る",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+        }
         StatusChip(
             icon = Icons.Default.SignalCellularAlt,
             label = when {
