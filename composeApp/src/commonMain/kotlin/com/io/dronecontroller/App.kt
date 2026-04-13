@@ -5,8 +5,10 @@ import com.io.dronecontroller.ui.connection.ConnectionScreen
 import com.io.dronecontroller.ui.controller.DroneControllerScreen
 import com.io.dronecontroller.ui.mission.MissionPlanningScreen
 import com.io.dronecontroller.ui.mission.MockMissionPlanningViewModel
+import com.io.dronecontroller.ui.splash.SplashScreen
 
 private sealed class Screen {
+    data object Splash : Screen()
     data object Connection : Screen()
     data object Controller : Screen()
     data class MissionPlanning(
@@ -23,9 +25,11 @@ fun App(
     onStopService: () -> Unit,
     onMock: () -> Unit,
 ) {
-    var screen by remember { mutableStateOf<Screen>(Screen.Connection) }
-//    var screen by remember { mutableStateOf<Screen>(Screen.Mock) }
+    var screen by remember { mutableStateOf<Screen>(Screen.Splash) }
     when (val s = screen) {
+        is Screen.Splash -> {
+            SplashScreen(onFinish = { screen = Screen.Connection })
+        }
         is Screen.Mock -> {
             DroneControllerScreen(
                 onNavigateToMission = { lat, lng ->
