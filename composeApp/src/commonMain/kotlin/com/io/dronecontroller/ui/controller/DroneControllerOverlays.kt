@@ -4,11 +4,14 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,7 +26,8 @@ import androidx.compose.material.icons.filled.Battery6Bar
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.BluetoothSearching
+import androidx.compose.material.icons.filled.WifiTethering
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
@@ -31,19 +35,26 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Satellite
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -277,7 +288,7 @@ fun TopRightActionButtons(
     onToggleMap: () -> Unit = {},
     onOpenBleSettings: () -> Unit = {},
     onOpenMission: () -> Unit = {},
-    onReturnToLaunch: () -> Unit = {},
+    onOpenDroneConnection: () -> Unit = {},
 ) {
     Column(
         modifier = modifier,
@@ -285,16 +296,16 @@ fun TopRightActionButtons(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         ActionCircleButton(
-            icon = if (isBleConnected) Icons.Default.BluetoothConnected else Icons.Default.Settings,
+            icon = if (isBleConnected) Icons.Default.BluetoothConnected else Icons.Default.BluetoothSearching,
             contentDescription = "BLE設定",
             tint = if (isBleConnected) GreenAccent else Color.White,
             onClick = onOpenBleSettings,
         )
         ActionCircleButton(
-            icon = Icons.Default.Home,
-            contentDescription = "ホーム",
-            enabled = isConnected,
-            onClick = onReturnToLaunch,
+            icon = Icons.Default.WifiTethering,
+            contentDescription = "ドローン接続",
+            tint = if (isConnected) GreenAccent else Color.White,
+            onClick = onOpenDroneConnection,
         )
         ActionCircleButton(
             icon = if (isMapMode) Icons.Default.Navigation else Icons.Default.Map,
@@ -626,6 +637,108 @@ private fun CommandButton(
                 modifier = Modifier.size(22.dp),
                 tint = if (enabled) Color.White else Color.White.copy(alpha = 0.3f),
             )
+        }
+    }
+}
+
+// ============================================================
+// DroneConnectionPanel — ドローン接続管理パネル
+// ============================================================
+
+@Composable
+fun DroneConnectionPanel(
+    isConnected: Boolean = false,
+    onDismiss: () -> Unit = {},
+    onDisconnect: () -> Unit = {},
+    onReconnect: (ip: String, port: Int) -> Unit = { _, _ -> },
+) {
+    var ip by remember { mutableStateOf("10.0.2.2") }
+    var portText by remember { mutableStateOf("50051") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x99000000))
+            .then(Modifier.padding(0.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(onClick = onDismiss),
+        )
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xF0121212),
+            modifier = Modifier.padding(24.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp).width(280.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.WifiTethering,
+                        contentDescription = null,
+                        tint = if (isConnected) GreenAccent else Color.Gray,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        text = "ドローン接続",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                HorizontalDivider(color = Color(0xFF2A2A2A))
+                if (isConnected) {
+                    Text(
+                        text = "接続中: $ip:$portText",
+                        color = GreenAccent,
+                        fontSize = 13.sp,
+                    )
+                    Button(
+                        onClick = onDisconnect,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("切断", color = Color.White)
+                    }
+                } else {
+                    Text(
+                        text = "未接続",
+                        color = Color.Gray,
+                        fontSize = 13.sp,
+                    )
+                    OutlinedTextField(
+                        value = ip,
+                        onValueChange = { ip = it },
+                        label = { Text("IPアドレス", color = Color.Gray, fontSize = 12.sp) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = portText,
+                        onValueChange = { portText = it },
+                        label = { Text("ポート", color = Color.Gray, fontSize = 12.sp) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Button(
+                        onClick = { onReconnect(ip, portText.toIntOrNull() ?: 50051) },
+                        colors = ButtonDefaults.buttonColors(containerColor = BlueAccent),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("再接続", color = Color.White)
+                    }
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
+                    Text("閉じる", color = Color.Gray, fontSize = 12.sp)
+                }
+            }
         }
     }
 }
