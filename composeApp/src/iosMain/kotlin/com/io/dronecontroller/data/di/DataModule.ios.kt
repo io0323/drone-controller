@@ -2,6 +2,8 @@ package com.io.dronecontroller.data.di
 
 import com.io.dronecontroller.data.datasource.BleDataSourceContract
 import com.io.dronecontroller.data.datasource.BleDataSourceStub
+import com.io.dronecontroller.data.datasource.ConnectionStorageContract
+import com.io.dronecontroller.data.datasource.ConnectionStorageStub
 import com.io.dronecontroller.data.datasource.MissionDataSourceContract
 import com.io.dronecontroller.data.datasource.MissionDataSourceStub
 import org.koin.core.module.Module
@@ -12,4 +14,5 @@ actual val dataSourceModule: Module =
     module {
         single<BleDataSourceContract> { BleDataSourceStub() }
         single<MissionDataSourceContract> { MissionDataSourceStub() }
+        single<ConnectionStorageContract> { ConnectionStorageStub() }
     }

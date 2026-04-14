@@ -12,6 +12,7 @@ import com.io.dronecontroller.domain.usecase.CapturePhotoUseCase
 import com.io.dronecontroller.domain.usecase.LandUseCase
 import com.io.dronecontroller.domain.usecase.ObserveBleConnectionStatusUseCase
 import com.io.dronecontroller.domain.usecase.ObserveBleControllerStateUseCase
+import com.io.dronecontroller.domain.usecase.ObserveConnectionUseCase
 import com.io.dronecontroller.domain.usecase.ObserveDroneStateUseCase
 import com.io.dronecontroller.domain.usecase.ReturnToLaunchUseCase
 import com.io.dronecontroller.domain.usecase.SendManualControlUseCase
@@ -48,6 +49,7 @@ class DroneControllerViewModelTest {
 
     private fun createViewModel(): DroneControllerViewModel =
         DroneControllerViewModel(
+            observeConnection = ObserveConnectionUseCase(mavRepo),
             observeDroneState = ObserveDroneStateUseCase(mavRepo),
             takeoffUseCase = TakeoffUseCase(mavRepo),
             landUseCase = LandUseCase(mavRepo),
@@ -210,11 +212,16 @@ class DroneControllerViewModelTest {
                     )
 
                 mavRepo.droneStateFlow.emit(droneState)
+                mavRepo.connectionFlow.emit(ConnectionStatus.Connected(Clock.System.now().toEpochMilliseconds()))
 
-                val updated = awaitItem()
+                var updated = awaitItem()
+                if (updated.altitudeMeters != 25.0f || updated.connectionStatus !is ConnectionStatus.Connected) {
+                    updated = awaitItem()
+                }
                 assertEquals(25.0f, updated.altitudeMeters)
                 assertEquals(80, updated.batteryPercent)
                 assertTrue(updated.connectionStatus is ConnectionStatus.Connected)
+                assertEquals(false, updated.isArmed)
 
                 cancelAndIgnoreRemainingEvents()
             }

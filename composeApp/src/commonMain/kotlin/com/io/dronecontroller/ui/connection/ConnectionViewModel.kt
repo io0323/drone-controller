@@ -2,6 +2,7 @@ package com.io.dronecontroller.ui.connection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.io.dronecontroller.data.datasource.ConnectionStorageContract
 import com.io.dronecontroller.domain.model.ConnectionStatus
 import com.io.dronecontroller.domain.usecase.ObserveConnectionUseCaseContract
 import kotlinx.coroutines.Job
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
 
 class ConnectionViewModel(
     private val observeConnection: ObserveConnectionUseCaseContract,
+    private val storage: ConnectionStorageContract,
 ) : ViewModel(),
     ConnectionViewModelContract {
     private val _uiState = MutableStateFlow(ConnectionUiState())
@@ -20,12 +22,24 @@ class ConnectionViewModel(
 
     private var connectionJob: Job? = null
 
+    init {
+        viewModelScope.launch {
+            val address = storage.loadLastAddress()
+            val port = storage.loadLastPort()
+            val history = storage.loadHistory()
+            _uiState.update { it.copy(address = address, port = port, history = history) }
+        }
+    }
+
     override fun connect() {
         val current = _uiState.value
         connectionJob?.cancel()
         _uiState.update { it.copy(status = ConnectionStatus.Connecting) }
         connectionJob =
             viewModelScope.launch {
+                storage.saveConnection(current.address, current.port)
+                val history = storage.loadHistory()
+                _uiState.update { it.copy(history = history) }
                 observeConnection(current.address, current.port)
                     .collect { status ->
                         _uiState.update { it.copy(status = status) }
@@ -51,5 +65,9 @@ class ConnectionViewModel(
 
     override fun updatePort(port: Int) {
         _uiState.update { it.copy(port = port) }
+    }
+
+    override fun selectHistory(address: String, port: Int) {
+        _uiState.update { it.copy(address = address, port = port) }
     }
 }

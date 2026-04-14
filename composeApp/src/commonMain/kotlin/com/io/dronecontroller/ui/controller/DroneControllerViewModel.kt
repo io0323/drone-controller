@@ -10,6 +10,7 @@ import com.io.dronecontroller.domain.usecase.CapturePhotoUseCaseContract
 import com.io.dronecontroller.domain.usecase.LandUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveBleConnectionStatusUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveBleControllerStateUseCaseContract
+import com.io.dronecontroller.domain.usecase.ObserveConnectionUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveDroneStateUseCaseContract
 import com.io.dronecontroller.domain.usecase.ReturnToLaunchUseCaseContract
 import com.io.dronecontroller.domain.usecase.SendManualControlUseCaseContract
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class DroneControllerViewModel(
+    private val observeConnection: ObserveConnectionUseCaseContract,
     private val observeDroneState: ObserveDroneStateUseCaseContract,
     private val takeoffUseCase: TakeoffUseCaseContract,
     private val landUseCase: LandUseCaseContract,
@@ -66,41 +68,43 @@ class DroneControllerViewModel(
         observingJob =
             viewModelScope.launch {
                 launch {
-                    observeDroneState(currentAddress, currentPort).collect { state ->
+                    observeConnection(currentAddress, currentPort).collect { status ->
                         val wasConnected = previousConnectionStatus is ConnectionStatus.Connected
                         val isDisconnected =
-                            state.connectionStatus is ConnectionStatus.Disconnected ||
-                                state.connectionStatus is ConnectionStatus.Error
+                            status is ConnectionStatus.Disconnected ||
+                                status is ConnectionStatus.Error
 
                         if (wasConnected && isDisconnected) {
                             handleUnexpectedDisconnect()
                             return@collect
                         }
 
-                        if (state.connectionStatus is ConnectionStatus.Connected && reconnectCount > 0) {
+                        if (status is ConnectionStatus.Connected && reconnectCount > 0) {
                             reconnectCount = 0
                             _uiState.update { it.copy(isReconnecting = false) }
                         }
 
-                        previousConnectionStatus = state.connectionStatus
+                        previousConnectionStatus = status
+                        _uiState.update { it.copy(connectionStatus = status) }
+                        droneStateHolder.update(
+                            batteryPercent = _uiState.value.batteryPercent,
+                            isConnected = status is ConnectionStatus.Connected,
+                        )
+                    }
+                }
+                launch {
+                    observeDroneState(currentAddress, currentPort).collect { state ->
                         _uiState.update { current ->
                             current.copy(
                                 altitudeMeters = state.altitudeMeters,
                                 batteryPercent = state.batteryPercent,
                                 speedKmh = state.speedKmh,
                                 satelliteCount = state.satelliteCount,
-                                connectionStatus = state.connectionStatus,
-                                isArmed = state.isArmed,
                                 latitude = state.latitude,
                                 longitude = state.longitude,
                                 bearing = state.bearing,
-                                isReturningToLaunch = current.isReturningToLaunch && state.isArmed,
                             )
                         }
-                        droneStateHolder.update(
-                            batteryPercent = state.batteryPercent,
-                            isConnected = state.connectionStatus is ConnectionStatus.Connected,
-                        )
                     }
                 }
                 launch {

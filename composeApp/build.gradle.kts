@@ -34,8 +34,10 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
+            implementation(libs.androidx.datastore.preferences)
             implementation(libs.mavsdk)
             implementation(libs.osmdroid.android)
+            implementation(libs.androidx.splashscreen)
             // ドローンコントローラーUIで使用するアイコン群
 //            implementation("androidx.compose.material:material-icons-extended:1.7.3")
         }

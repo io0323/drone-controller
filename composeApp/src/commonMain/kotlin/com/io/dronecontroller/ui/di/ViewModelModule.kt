@@ -10,8 +10,8 @@ import org.koin.dsl.module
 
 val viewModelModule: Module =
     module {
-        viewModel { ConnectionViewModel(get()) }
-        viewModel { DroneControllerViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+        viewModel { ConnectionViewModel(get(), get()) }
+        viewModel { DroneControllerViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
         viewModel { BleControllerViewModel(get(), get(), get(), get()) }
         viewModel { MissionPlanningViewModel(get(), get(), get(), get(), get()) }
     }
