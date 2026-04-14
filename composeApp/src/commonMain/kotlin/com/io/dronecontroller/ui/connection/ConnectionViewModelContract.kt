@@ -14,4 +14,6 @@ interface ConnectionViewModelContract {
     fun updateAddress(address: String)
 
     fun updatePort(port: Int)
+
+    fun selectHistory(address: String, port: Int)
 }

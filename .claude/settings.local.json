@@ -11,7 +11,10 @@
       "Bash(./gradlew :composeApp:testDebugUnitTest --no-configuration-cache)",
       "Bash(grep \"io/mavsdk/camera/Camera.class\\\\|io/mavsdk/camera/Camera\\\\$\")",
       "Read(//private/tmp/**)",
-      "Bash(jar xf:*)"
+      "Bash(jar xf:*)",
+      "Bash(wait)",
+      "Bash(./gradlew :composeApp:compileDebugKotlinAndroid)",
+      "Bash(echo \"EXIT: $?\")"
     ]
   }
 }
