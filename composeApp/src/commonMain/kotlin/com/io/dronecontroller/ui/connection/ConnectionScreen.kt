@@ -72,10 +72,11 @@ fun ConnectionScreen(
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth(0.88f)
-                .background(CardBg, RoundedCornerShape(20.dp))
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.88f)
+                    .background(CardBg, RoundedCornerShape(20.dp))
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -127,7 +128,10 @@ fun ConnectionScreen(
                 ) { Text("切断", color = Color.White) }
 
                 Button(
-                    onClick = { viewModel.mock(); onMock() },
+                    onClick = {
+                        viewModel.mock()
+                        onMock()
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF374151)),
                     modifier = Modifier.weight(1f),
                 ) { Text("モック", color = Color.White) }
@@ -137,7 +141,6 @@ fun ConnectionScreen(
         }
     }
 }
-
 
 @Composable
 private fun DroneIconSection(status: ConnectionStatus) {
@@ -165,27 +168,30 @@ private fun DroneIconSection(status: ConnectionStatus) {
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(120.dp)
-                .scale(iconScale)
-                .background(
-                    color = when {
-                        isConnected -> GreenAccent.copy(alpha = 0.15f)
-                        isConnecting -> BlueAccent.copy(alpha = 0.12f)
-                        else -> Color(0xFF1A2233)
-                    },
-                    shape = CircleShape,
-                ),
+            modifier =
+                Modifier
+                    .size(120.dp)
+                    .scale(iconScale)
+                    .background(
+                        color =
+                            when {
+                                isConnected -> GreenAccent.copy(alpha = 0.15f)
+                                isConnecting -> BlueAccent.copy(alpha = 0.12f)
+                                else -> Color(0xFF1A2233)
+                            },
+                        shape = CircleShape,
+                    ),
         ) {
             Icon(
                 imageVector = Icons.Default.Flight,
                 contentDescription = "ドローン",
                 modifier = Modifier.size(68.dp).alpha(iconAlpha),
-                tint = when {
-                    isConnected -> GreenAccent
-                    isConnecting -> BlueAccent
-                    else -> Color(0xFF4B5563)
-                },
+                tint =
+                    when {
+                        isConnected -> GreenAccent
+                        isConnecting -> BlueAccent
+                        else -> Color(0xFF4B5563)
+                    },
             )
         }
         Text(
@@ -223,10 +229,11 @@ private fun HistorySection(
                     text = "$address : $port",
                     color = BlueAccent,
                     fontSize = 13.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelect(address, port) }
-                        .padding(vertical = 5.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(address, port) }
+                            .padding(vertical = 5.dp),
                 )
             }
         }
@@ -235,19 +242,21 @@ private fun HistorySection(
 
 @Composable
 private fun StatusText(status: ConnectionStatus) {
-    val (text, color) = when (status) {
-        is ConnectionStatus.Disconnected -> "未接続" to Color.Gray
-        is ConnectionStatus.Connecting -> "接続中..." to BlueAccent
-        is ConnectionStatus.Connected -> "接続済み" to GreenAccent
-        is ConnectionStatus.Error -> "エラー: ${status.message}" to Color(0xFFEF4444)
-    }
+    val (text, color) =
+        when (status) {
+            is ConnectionStatus.Disconnected -> "未接続" to Color.Gray
+            is ConnectionStatus.Connecting -> "接続中..." to BlueAccent
+            is ConnectionStatus.Connected -> "接続済み" to GreenAccent
+            is ConnectionStatus.Error -> "エラー: ${status.message}" to Color(0xFFEF4444)
+        }
     Text(text = text, color = color, fontSize = 13.sp)
 }
 
 @Composable
-private fun inputColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
-    focusedBorderColor = BlueAccent,
-    unfocusedBorderColor = Color(0xFF374151),
-)
+private fun inputColors() =
+    OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        focusedBorderColor = BlueAccent,
+        unfocusedBorderColor = Color(0xFF374151),
+    )

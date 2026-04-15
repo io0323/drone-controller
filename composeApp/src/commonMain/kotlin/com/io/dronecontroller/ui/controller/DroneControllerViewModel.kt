@@ -134,7 +134,7 @@ class DroneControllerViewModel(
                                 yaw = input.leftX,
                             )
                         }
-                        delay(100L)
+                        delay(50L)
                     }
                 }
             }

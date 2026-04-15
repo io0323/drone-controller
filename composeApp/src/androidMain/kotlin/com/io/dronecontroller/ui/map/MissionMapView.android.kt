@@ -30,37 +30,44 @@ actual fun MissionMapView(
 ) {
     val context = LocalContext.current
     val hasPosition = droneLat != 0.0 || droneLng != 0.0
-    val centerLat = when {
-        waypoints.isNotEmpty() -> waypoints.first().latitudeDeg
-        hasPosition -> droneLat
-        else -> DEFAULT_LAT
-    }
-    val centerLng = when {
-        waypoints.isNotEmpty() -> waypoints.first().longitudeDeg
-        hasPosition -> droneLng
-        else -> DEFAULT_LNG
-    }
+    val centerLat =
+        when {
+            waypoints.isNotEmpty() -> waypoints.first().latitudeDeg
+            hasPosition -> droneLat
+            else -> DEFAULT_LAT
+        }
+    val centerLng =
+        when {
+            waypoints.isNotEmpty() -> waypoints.first().longitudeDeg
+            hasPosition -> droneLng
+            else -> DEFAULT_LNG
+        }
 
     Configuration.getInstance().userAgentValue = context.packageName
 
-    val mapView = remember {
-        MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(true)
-            controller.setZoom(MAP_ZOOM)
-            controller.setCenter(GeoPoint(centerLat, centerLng))
+    val mapView =
+        remember {
+            MapView(context).apply {
+                setTileSource(TileSourceFactory.MAPNIK)
+                setMultiTouchControls(true)
+                controller.setZoom(MAP_ZOOM)
+                controller.setCenter(GeoPoint(centerLat, centerLng))
+            }
         }
-    }
 
     LaunchedEffect(waypoints, droneLat, droneLng) {
         mapView.overlays.clear()
 
         if (waypoints.size >= 2) {
-            val polyline = Polyline(mapView).apply {
-                outlinePaint.color = androidx.compose.ui.graphics.Color(0xFF00BFFF).toArgb()
-                outlinePaint.strokeWidth = 5f
-                setPoints(waypoints.map { GeoPoint(it.latitudeDeg, it.longitudeDeg) })
-            }
+            val polyline =
+                Polyline(mapView).apply {
+                    outlinePaint.color =
+                        androidx.compose.ui.graphics
+                            .Color(0xFF00BFFF)
+                            .toArgb()
+                    outlinePaint.strokeWidth = 5f
+                    setPoints(waypoints.map { GeoPoint(it.latitudeDeg, it.longitudeDeg) })
+                }
             mapView.overlays.add(polyline)
         }
 

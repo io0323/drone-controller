@@ -14,7 +14,15 @@
       "Bash(jar xf:*)",
       "Bash(wait)",
       "Bash(./gradlew :composeApp:compileDebugKotlinAndroid)",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(./gradlew ktlintCheck)",
+      "Bash(./gradlew :composeApp:jvmTest)",
+      "Bash(./gradlew :composeApp:compileKotlinJvm)",
+      "Bash(./gradlew :composeApp:jvmTest --no-daemon)",
+      "Bash(tee /tmp/jvmtest.log)",
+      "Read(//tmp/**)",
+      "Bash(echo \"EXIT\")",
+      "Bash(./gradlew :composeApp:compileKotlinJvm :composeApp:compileTestKotlinJvm)"
     ]
   }
 }

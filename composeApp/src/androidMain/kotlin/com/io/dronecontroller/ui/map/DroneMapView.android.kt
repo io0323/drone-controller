@@ -31,27 +31,30 @@ actual fun DroneMapView(
 
     Configuration.getInstance().userAgentValue = context.packageName
 
-    val mapView = remember {
-        MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(true)
-            controller.setZoom(MAP_ZOOM)
-            controller.setCenter(GeoPoint(initialLat, initialLng))
+    val mapView =
+        remember {
+            MapView(context).apply {
+                setTileSource(TileSourceFactory.MAPNIK)
+                setMultiTouchControls(true)
+                controller.setZoom(MAP_ZOOM)
+                controller.setCenter(GeoPoint(initialLat, initialLng))
+            }
         }
-    }
 
-    val marker = remember {
-        Marker(mapView).apply {
-            title = "機体位置"
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+    val marker =
+        remember {
+            Marker(mapView).apply {
+                title = "機体位置"
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            }
         }
-    }
 
     LaunchedEffect(latitude, longitude, bearing) {
-        val point = GeoPoint(
-            if (hasPosition) latitude else DEFAULT_LAT,
-            if (hasPosition) longitude else DEFAULT_LNG,
-        )
+        val point =
+            GeoPoint(
+                if (hasPosition) latitude else DEFAULT_LAT,
+                if (hasPosition) longitude else DEFAULT_LNG,
+            )
         marker.position = point
         marker.rotation = bearing
         if (!mapView.overlays.contains(marker)) {

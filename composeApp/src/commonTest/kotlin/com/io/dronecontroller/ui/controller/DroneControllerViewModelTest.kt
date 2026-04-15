@@ -72,6 +72,7 @@ class DroneControllerViewModelTest {
     @AfterTest
     fun tearDown() {
         vm.stopObserving()
+        dispatcher.scheduler.advanceUntilIdle()
         Dispatchers.resetMain()
     }
 
