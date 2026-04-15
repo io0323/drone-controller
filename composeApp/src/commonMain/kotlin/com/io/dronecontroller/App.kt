@@ -1,6 +1,10 @@
 package com.io.dronecontroller
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.io.dronecontroller.ui.connection.ConnectionScreen
 import com.io.dronecontroller.ui.controller.DroneControllerScreen
 import com.io.dronecontroller.ui.mission.MissionPlanningScreen
@@ -9,13 +13,17 @@ import com.io.dronecontroller.ui.splash.SplashScreen
 
 private sealed class Screen {
     data object Splash : Screen()
+
     data object Connection : Screen()
+
     data object Controller : Screen()
+
     data class MissionPlanning(
         val droneLat: Double,
         val droneLng: Double,
         val isMock: Boolean = false,
     ) : Screen()
+
     data object Mock : Screen()
 }
 

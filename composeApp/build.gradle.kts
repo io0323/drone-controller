@@ -86,7 +86,6 @@ android {
                 .toInt()
         versionCode = 1
         versionName = "1.0"
-
     }
     packaging {
         resources {

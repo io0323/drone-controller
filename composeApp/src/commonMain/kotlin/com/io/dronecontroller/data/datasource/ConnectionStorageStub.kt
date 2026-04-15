@@ -14,6 +14,8 @@ class ConnectionStorageStub : ConnectionStorageContract {
     }
 
     override suspend fun loadLastAddress() = lastAddress
+
     override suspend fun loadLastPort() = lastPort
+
     override suspend fun loadHistory(): List<Pair<String, Int>> = history.toList()
 }

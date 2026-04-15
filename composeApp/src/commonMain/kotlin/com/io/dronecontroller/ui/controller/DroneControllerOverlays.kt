@@ -5,6 +5,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,17 +19,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Battery6Bar
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothConnected
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.BluetoothSearching
-import androidx.compose.material.icons.filled.WifiTethering
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
@@ -35,21 +34,21 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Satellite
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.WifiTethering
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,10 +127,11 @@ fun StatusChips(
     ) {
         if (onBack != null) {
             Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(ChipBg),
+                modifier =
+                    Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(ChipBg),
                 contentAlignment = Alignment.Center,
             ) {
                 IconButton(onClick = onBack) {
@@ -146,16 +146,18 @@ fun StatusChips(
         }
         StatusChip(
             icon = Icons.Default.SignalCellularAlt,
-            label = when {
-                isReconnecting -> "再接続中"
-                isConnected -> "HD"
-                else -> "--"
-            },
-            iconTint = when {
-                isReconnecting -> OrangeAccent
-                isConnected -> GreenAccent
-                else -> Color.Gray
-            },
+            label =
+                when {
+                    isReconnecting -> "再接続中"
+                    isConnected -> "HD"
+                    else -> "--"
+                },
+            iconTint =
+                when {
+                    isReconnecting -> OrangeAccent
+                    isConnected -> GreenAccent
+                    else -> Color.Gray
+                },
         )
         StatusChip(
             icon = Icons.Default.Battery6Bar,
@@ -483,7 +485,15 @@ fun CameraActionButtons(
                     .shadow(elevation = 4.dp, shape = CircleShape)
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(if (isRecording) Color(0xFFDC2626) else if (isConnected) Color.White else Color(0xFF888888)),
+                    .background(
+                        if (isRecording) {
+                            Color(0xFFDC2626)
+                        } else if (isConnected) {
+                            Color.White
+                        } else {
+                            Color(0xFF888888)
+                        }
+                    ),
 //                    .background(Color(0xFFDC2626)), //Mock
         ) {
             IconButton(
@@ -656,16 +666,18 @@ fun DroneConnectionPanel(
     var portText by remember { mutableStateOf("50051") }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0x99000000))
-            .then(Modifier.padding(0.dp)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color(0x99000000))
+                .then(Modifier.padding(0.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(onClick = onDismiss),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .clickable(onClick = onDismiss),
         )
         Surface(
             shape = RoundedCornerShape(16.dp),

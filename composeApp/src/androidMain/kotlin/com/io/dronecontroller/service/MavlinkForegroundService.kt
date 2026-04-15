@@ -5,9 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
-import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.RequiresApi
@@ -20,10 +18,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 
 class MavlinkForegroundService : Service() {
-
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private lateinit var notificationManager: NotificationManager
     private var job: Job? = null
@@ -39,22 +35,23 @@ class MavlinkForegroundService : Service() {
         if (intent?.action == "START") {
             startForeground(NOTIFICATION_ID, createNotification("接続中..."))
             job?.cancel()
-            job = scope.launch {
-                try {
-                    val client = DroneGrpcClient()
-                    client.connect().collect { state ->
+            job =
+                scope.launch {
+                    try {
+                        val client = DroneGrpcClient()
+                        client.connect().collect { state ->
+                            notificationManager.notify(
+                                NOTIFICATION_ID,
+                                createNotification(state)
+                            )
+                        }
+                    } catch (e: Exception) {
                         notificationManager.notify(
                             NOTIFICATION_ID,
-                            createNotification(state)
+                            createNotification("オフライン（サーバ未接続）" + e.message)
                         )
                     }
-                } catch (e: Exception) {
-                    notificationManager.notify(
-                        NOTIFICATION_ID,
-                        createNotification("オフライン（サーバ未接続）" + e.message)
-                    )
                 }
-            }
         }
 
         return START_STICKY
@@ -69,14 +66,16 @@ class MavlinkForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotification(text: String): Notification {
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE
-        )
+        val pendingIntent =
+            PendingIntent.getActivity(
+                this,
+                0,
+                Intent(this, MainActivity::class.java),
+                PendingIntent.FLAG_IMMUTABLE
+            )
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        return NotificationCompat
+            .Builder(this, CHANNEL_ID)
             .setContentTitle("Drone Controller")
             .setContentText(text)
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
@@ -87,11 +86,12 @@ class MavlinkForegroundService : Service() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Drone Service",
-            NotificationManager.IMPORTANCE_LOW
-        )
+        val channel =
+            NotificationChannel(
+                CHANNEL_ID,
+                "Drone Service",
+                NotificationManager.IMPORTANCE_LOW
+            )
         notificationManager.createNotificationChannel(channel)
     }
 

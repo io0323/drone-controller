@@ -9,7 +9,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.io.dronecontroller.service.MavlinkForegroundService
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -30,9 +29,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startDroneService() {
-        val intent = Intent(this, MavlinkForegroundService::class.java).apply {
-            action = "START"
-        }
+        val intent =
+            Intent(this, MavlinkForegroundService::class.java).apply {
+                action = "START"
+            }
         ContextCompat.startForegroundService(this, intent)
     }
 
@@ -42,9 +42,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun mock() {
-        val intent = Intent(this, MavlinkForegroundService::class.java).apply {
-            action = "START"
-        }
+        val intent =
+            Intent(this, MavlinkForegroundService::class.java).apply {
+                action = "START"
+            }
         startService(intent)
     }
 }

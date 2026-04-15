@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.first
 
 private val Context.connectionDataStore by preferencesDataStore("connection")
 
-class ConnectionStorageImpl(private val context: Context) : ConnectionStorageContract {
+class ConnectionStorageImpl(
+    private val context: Context
+) : ConnectionStorageContract {
     private val ADDRESS = stringPreferencesKey("address")
     private val PORT = intPreferencesKey("port")
     private val HISTORY = stringPreferencesKey("history")
@@ -19,8 +21,10 @@ class ConnectionStorageImpl(private val context: Context) : ConnectionStorageCon
             prefs[ADDRESS] = address
             prefs[PORT] = port
             val prev = parseHistory(prefs[HISTORY]).filter { it.first != address || it.second != port }
-            prefs[HISTORY] = (listOf(address to port) + prev).take(5)
-                .joinToString("|") { "${it.first}:${it.second}" }
+            prefs[HISTORY] =
+                (listOf(address to port) + prev)
+                    .take(5)
+                    .joinToString("|") { "${it.first}:${it.second}" }
         }
     }
 

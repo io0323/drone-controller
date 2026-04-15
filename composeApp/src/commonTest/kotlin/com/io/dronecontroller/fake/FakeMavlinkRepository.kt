@@ -16,7 +16,7 @@ class FakeMavlinkRepository : MavlinkRepositoryContract {
     var stopVideoResult: RunStatus<Unit> = RunStatus.Success(Unit)
 
     val droneStateFlow = MutableSharedFlow<DroneState>(replay = 1)
-    val connectionFlow = MutableSharedFlow<ConnectionStatus>()
+    val connectionFlow = MutableSharedFlow<ConnectionStatus>(replay = 1)
 
     var disconnectCalled = false
 
