@@ -6,7 +6,7 @@ interface DroneControllerViewModelContract {
     val uiState: StateFlow<DroneControllerUiState>
 
     fun startObserving(
-        address: String = "10.0.2.2",
+        address: String = "192.168.3.11",
         port: Int = 50051,
     )
 

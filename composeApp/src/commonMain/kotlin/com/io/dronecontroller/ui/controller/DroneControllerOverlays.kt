@@ -662,7 +662,7 @@ fun DroneConnectionPanel(
     onDisconnect: () -> Unit = {},
     onReconnect: (ip: String, port: Int) -> Unit = { _, _ -> },
 ) {
-    var ip by remember { mutableStateOf("10.0.2.2") }
+    var ip by remember { mutableStateOf("192.168.3.11") }
     var portText by remember { mutableStateOf("50051") }
 
     Box(

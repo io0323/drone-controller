@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.io.dronecontroller.data.datasource.ConnectionStorageContract
 import com.io.dronecontroller.domain.model.ConnectionStatus
 import com.io.dronecontroller.domain.usecase.ObserveConnectionUseCaseContract
+import com.io.dronecontroller.service.ConnectionModeHolder
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 class ConnectionViewModel(
     private val observeConnection: ObserveConnectionUseCaseContract,
     private val storage: ConnectionStorageContract,
+    private val modeHolder: ConnectionModeHolder,
 ) : ViewModel(),
     ConnectionViewModelContract {
     private val _uiState = MutableStateFlow(ConnectionUiState())
@@ -69,5 +71,16 @@ class ConnectionViewModel(
 
     override fun selectHistory(address: String, port: Int) {
         _uiState.update { it.copy(address = address, port = port) }
+    }
+
+    override fun toggleMode() {
+        val newMode = !_uiState.value.isDirectUdpMode
+        modeHolder.isDirectUdpMode = newMode
+        _uiState.update {
+            it.copy(
+                isDirectUdpMode = newMode,
+                port = if (newMode) 14550 else 50051,
+            )
+        }
     }
 }

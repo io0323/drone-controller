@@ -1,7 +1,7 @@
 package com.io.dronecontroller.data.datasource
 
 class ConnectionStorageStub : ConnectionStorageContract {
-    private var lastAddress = "10.0.2.2"
+    private var lastAddress = "192.168.3.11"
     private var lastPort = 50051
     private val history = mutableListOf<Pair<String, Int>>()
 

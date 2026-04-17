@@ -47,7 +47,7 @@ class DroneControllerViewModel(
     private val _virtualJoystick = MutableStateFlow(BleControllerState())
     private var observingJob: Job? = null
 
-    private var currentAddress: String = "10.0.2.2"
+    private var currentAddress: String = "192.168.3.11"
     private var currentPort: Int = 50051
     private var reconnectCount = 0
     private var previousConnectionStatus: ConnectionStatus = ConnectionStatus.Disconnected
