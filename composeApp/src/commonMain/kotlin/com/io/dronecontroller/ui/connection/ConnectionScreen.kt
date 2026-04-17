@@ -27,6 +27,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -82,10 +84,37 @@ fun ConnectionScreen(
         ) {
             DroneIconSection(status = uiState.status)
 
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                RadioButton(
+                    selected = !uiState.isDirectUdpMode,
+                    onClick = { if (uiState.isDirectUdpMode) viewModel.toggleMode() },
+                    enabled = uiState.status !is ConnectionStatus.Connected,
+                    colors = RadioButtonDefaults.colors(selectedColor = BlueAccent),
+                )
+                Text("本番 (gRPC)", color = Color.White, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                RadioButton(
+                    selected = uiState.isDirectUdpMode,
+                    onClick = { if (!uiState.isDirectUdpMode) viewModel.toggleMode() },
+                    enabled = uiState.status !is ConnectionStatus.Connected,
+                    colors = RadioButtonDefaults.colors(selectedColor = BlueAccent),
+                )
+                Text("モック (UDP直接)", color = Color.White, fontSize = 13.sp, modifier = Modifier.weight(1f))
+            }
+
             OutlinedTextField(
                 value = uiState.address,
                 onValueChange = viewModel::updateAddress,
-                label = { Text("IPアドレス", color = Color.Gray, fontSize = 12.sp) },
+                label = {
+                    Text(
+                        if (uiState.isDirectUdpMode) "drone-emulatorのIPアドレス" else "mavsdk_serverのIPアドレス",
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                    )
+                },
                 singleLine = true,
                 enabled = uiState.status !is ConnectionStatus.Connected,
                 colors = inputColors(),
@@ -94,8 +123,14 @@ fun ConnectionScreen(
 
             OutlinedTextField(
                 value = uiState.port.toString(),
-                onValueChange = { viewModel.updatePort(it.toIntOrNull() ?: 50051) },
-                label = { Text("ポート", color = Color.Gray, fontSize = 12.sp) },
+                onValueChange = { viewModel.updatePort(it.toIntOrNull() ?: if (uiState.isDirectUdpMode) 14550 else 50051) },
+                label = {
+                    Text(
+                        if (uiState.isDirectUdpMode) "UDPポート（デフォルト: 14550）" else "gRPCポート（デフォルト: 50051）",
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                    )
+                },
                 singleLine = true,
                 enabled = uiState.status !is ConnectionStatus.Connected,
                 colors = inputColors(),

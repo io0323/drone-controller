@@ -29,7 +29,7 @@ class ConnectionStorageImpl(
     }
 
     override suspend fun loadLastAddress(): String =
-        context.connectionDataStore.data.first()[ADDRESS] ?: "10.0.2.2"
+        context.connectionDataStore.data.first()[ADDRESS] ?: "192.168.3.11"
 
     override suspend fun loadLastPort(): Int =
         context.connectionDataStore.data.first()[PORT] ?: 50051

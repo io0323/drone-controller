@@ -3,6 +3,7 @@ package com.io.dronecontroller.data.datasource
 import com.io.dronecontroller.domain.model.ConnectionStatus
 import com.io.dronecontroller.domain.model.DroneState
 import com.io.dronecontroller.domain.model.RunStatus
+import com.io.dronecontroller.service.ConnectionModeHolder
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +11,14 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.retryWhen
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import kotlin.coroutines.resume
 import kotlin.math.sqrt
 import io.mavsdk.System as MavsdkSystem
@@ -274,4 +282,174 @@ class MavlinkDataSource(
         }
         return block()
     }
+}
+
+// ─── UDP直接接続実装 ───────────────────────────────────────────────
+
+class UdpMavlinkDataSource : MavlinkDataSourceContract {
+
+    override fun observeConnectionState(address: String, port: Int): Flow<ConnectionStatus> =
+        callbackFlow {
+            val socket = DatagramSocket()
+            socket.soTimeout = 3000
+            val target = InetAddress.getByName(address)
+            var lastHeartbeat = 0L
+            var seq = 0
+
+            val sendJob = launch {
+                while (isActive) {
+                    runCatching {
+                        val pkt = buildGcsHeartbeat(seq++ and 0xFF)
+                        socket.send(DatagramPacket(pkt, pkt.size, target, port))
+                    }
+                    delay(1000)
+                }
+            }
+
+            val receiveJob = launch {
+                val buf = ByteArray(512)
+                val dp = DatagramPacket(buf, buf.size)
+                while (isActive) {
+                    try {
+                        socket.receive(dp)
+                        if (parseMsgId(buf, dp.length) == 0) {
+                            lastHeartbeat = System.currentTimeMillis()
+                            trySend(ConnectionStatus.Connected(lastHeartbeat))
+                        }
+                    } catch (_: java.net.SocketTimeoutException) {
+                        if (System.currentTimeMillis() - lastHeartbeat > 3000) {
+                            trySend(ConnectionStatus.Disconnected)
+                        }
+                    } catch (e: Exception) {
+                        trySend(ConnectionStatus.Error(e.message ?: "UDP接続エラー"))
+                    }
+                }
+            }
+
+            awaitClose {
+                sendJob.cancel()
+                receiveJob.cancel()
+                socket.close()
+            }
+        }
+
+    override fun observeDroneState(address: String, port: Int): Flow<DroneState> =
+        callbackFlow {
+            val socket = DatagramSocket()
+            socket.soTimeout = 3000
+            val target = InetAddress.getByName(address)
+            var seq = 0
+            var state = DroneState()
+
+            val sendJob = launch {
+                while (isActive) {
+                    runCatching {
+                        val pkt = buildGcsHeartbeat(seq++ and 0xFF)
+                        socket.send(DatagramPacket(pkt, pkt.size, target, port))
+                    }
+                    delay(1000)
+                }
+            }
+
+            val receiveJob = launch {
+                val buf = ByteArray(512)
+                val dp = DatagramPacket(buf, buf.size)
+                while (isActive) {
+                    try {
+                        socket.receive(dp)
+                        val msgId = parseMsgId(buf, dp.length)
+                        val payloadOffset = when (buf[0]) {
+                            0xFE.toByte() -> 6
+                            0xFD.toByte() -> 10
+                            else -> continue
+                        }
+                        when (msgId) {
+                            33 -> { // GLOBAL_POSITION_INT
+                                val bb = ByteBuffer.wrap(buf, payloadOffset, dp.length - payloadOffset - 2)
+                                    .order(ByteOrder.LITTLE_ENDIAN)
+                                bb.int // time_boot_ms
+                                val lat = bb.int / 1e7
+                                val lon = bb.int / 1e7
+                                bb.int // alt MSL mm
+                                val relAlt = bb.int / 1000f
+                                state = state.copy(latitude = lat, longitude = lon, altitudeMeters = relAlt)
+                                trySend(state)
+                            }
+                        }
+                    } catch (_: java.net.SocketTimeoutException) {
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+
+            awaitClose {
+                sendJob.cancel()
+                receiveJob.cancel()
+                socket.close()
+            }
+        }
+
+    override fun disconnect() {}
+
+    override suspend fun takeoff(altitudeMeters: Float): RunStatus<Unit> = RunStatus.Error("UDP直接モードでは未対応")
+    override suspend fun land(): RunStatus<Unit> = RunStatus.Error("UDP直接モードでは未対応")
+    override suspend fun returnToLaunch(): RunStatus<Unit> = RunStatus.Error("UDP直接モードでは未対応")
+    override fun sendManualControl(pitch: Float, roll: Float, throttle: Float, yaw: Float) {}
+    override suspend fun capturePhoto(): RunStatus<Unit> = RunStatus.Error("UDP直接モードでは未対応")
+    override suspend fun startVideo(): RunStatus<Unit> = RunStatus.Error("UDP直接モードでは未対応")
+    override suspend fun stopVideo(): RunStatus<Unit> = RunStatus.Error("UDP直接モードでは未対応")
+
+    private fun parseMsgId(buf: ByteArray, len: Int): Int {
+        if (len < 8) return -1
+        return when (buf[0]) {
+            0xFE.toByte() -> buf[5].toInt() and 0xFF
+            0xFD.toByte() -> if (len < 12) -1
+                else (buf[7].toInt() and 0xFF) or ((buf[8].toInt() and 0xFF) shl 8) or ((buf[9].toInt() and 0xFF) shl 16)
+            else -> -1
+        }
+    }
+
+    private fun buildGcsHeartbeat(seq: Int): ByteArray {
+        val payload = byteArrayOf(0, 0, 0, 0, 6, 8, 0, 4, 3)
+        val header = byteArrayOf(0xFE.toByte(), 9, seq.toByte(), 0xFF.toByte(), 0xBE.toByte(), 0)
+        val crc = mavlinkCrc(header, payload, 50)
+        return header + payload + byteArrayOf((crc and 0xFF).toByte(), ((crc ushr 8) and 0xFF).toByte())
+    }
+
+    private fun mavlinkCrc(header: ByteArray, payload: ByteArray, extra: Int): Int {
+        var crc = 0xFFFF
+        for (b in header.copyOfRange(1, 6) + payload) {
+            var tmp = (b.toInt() and 0xFF) xor (crc and 0xFF)
+            tmp = tmp xor ((tmp shl 4) and 0xFF)
+            crc = ((crc ushr 8) and 0xFF) xor (tmp shl 8) xor (tmp shl 3) xor (tmp ushr 4)
+            crc = crc and 0xFFFF
+        }
+        var tmp = extra xor (crc and 0xFF)
+        tmp = tmp xor ((tmp shl 4) and 0xFF)
+        crc = ((crc ushr 8) and 0xFF) xor (tmp shl 8) xor (tmp shl 3) xor (tmp ushr 4)
+        return crc and 0xFFFF
+    }
+}
+
+// ─── 接続モードに応じてgRPC/UDPを切り替えるラッパー ─────────────────────
+
+class RoutingMavlinkDataSource(
+    private val grpc: MavlinkDataSource,
+    private val udp: UdpMavlinkDataSource,
+    private val modeHolder: ConnectionModeHolder,
+) : MavlinkDataSourceContract {
+
+    private val active: MavlinkDataSourceContract get() = if (modeHolder.isDirectUdpMode) udp else grpc
+
+    override fun observeConnectionState(address: String, port: Int) = active.observeConnectionState(address, port)
+    override fun observeDroneState(address: String, port: Int) = active.observeDroneState(address, port)
+    override fun disconnect() = active.disconnect()
+    override suspend fun takeoff(altitudeMeters: Float) = active.takeoff(altitudeMeters)
+    override suspend fun land() = active.land()
+    override suspend fun returnToLaunch() = active.returnToLaunch()
+    override fun sendManualControl(pitch: Float, roll: Float, throttle: Float, yaw: Float) =
+        active.sendManualControl(pitch, roll, throttle, yaw)
+    override suspend fun capturePhoto() = active.capturePhoto()
+    override suspend fun startVideo() = active.startVideo()
+    override suspend fun stopVideo() = active.stopVideo()
 }
