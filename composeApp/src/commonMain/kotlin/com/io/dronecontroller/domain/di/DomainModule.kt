@@ -6,6 +6,8 @@ import com.io.dronecontroller.domain.usecase.ConnectBleDeviceUseCase
 import com.io.dronecontroller.domain.usecase.ConnectBleDeviceUseCaseContract
 import com.io.dronecontroller.domain.usecase.DisconnectBleDeviceUseCase
 import com.io.dronecontroller.domain.usecase.DisconnectBleDeviceUseCaseContract
+import com.io.dronecontroller.domain.usecase.DisconnectDroneUseCase
+import com.io.dronecontroller.domain.usecase.DisconnectDroneUseCaseContract
 import com.io.dronecontroller.domain.usecase.LandUseCase
 import com.io.dronecontroller.domain.usecase.LandUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveBleConnectionStatusUseCase
@@ -44,6 +46,7 @@ import org.koin.dsl.module
 val useCaseModule: Module =
     module {
         single<ObserveConnectionUseCaseContract> { ObserveConnectionUseCase(get()) }
+        single<DisconnectDroneUseCaseContract> { DisconnectDroneUseCase(get()) }
         single<ObserveDroneStateUseCaseContract> { ObserveDroneStateUseCase(get()) }
         single<TakeoffUseCaseContract> { TakeoffUseCase(get()) }
         single<LandUseCaseContract> { LandUseCase(get()) }
