@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.io.dronecontroller.data.datasource.ConnectionStorageContract
 import com.io.dronecontroller.domain.model.ConnectionStatus
+import com.io.dronecontroller.domain.usecase.DisconnectDroneUseCaseContract
 import com.io.dronecontroller.domain.usecase.ObserveConnectionUseCaseContract
 import com.io.dronecontroller.service.ConnectionModeHolder
 import kotlinx.coroutines.Job
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 
 class ConnectionViewModel(
     private val observeConnection: ObserveConnectionUseCaseContract,
+    private val disconnectDrone: DisconnectDroneUseCaseContract,
     private val storage: ConnectionStorageContract,
     private val modeHolder: ConnectionModeHolder,
 ) : ViewModel(),
@@ -52,12 +54,14 @@ class ConnectionViewModel(
     override fun disconnect() {
         connectionJob?.cancel()
         connectionJob = null
+        disconnectDrone()
         _uiState.update { it.copy(status = ConnectionStatus.Disconnected) }
     }
 
     override fun mock() {
         connectionJob?.cancel()
         connectionJob = null
+        disconnectDrone()
         _uiState.update { it.copy(status = ConnectionStatus.Disconnected) }
     }
 

@@ -4,6 +4,7 @@ import com.io.dronecontroller.domain.model.ConnectionStatus
 import com.io.dronecontroller.domain.model.DroneState
 import com.io.dronecontroller.domain.model.RunStatus
 import com.io.dronecontroller.service.ConnectionModeHolder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -288,15 +290,27 @@ class MavlinkDataSource(
 
 class UdpMavlinkDataSource : MavlinkDataSourceContract {
 
+    private var udpSocket: DatagramSocket? = null
+
+    private fun getOrCreateSocket(port: Int): DatagramSocket {
+        val existing = udpSocket
+        if (existing != null && !existing.isClosed) return existing
+        return DatagramSocket(null).also {
+            it.reuseAddress = true
+            it.bind(java.net.InetSocketAddress(port))
+            udpSocket = it
+        }
+    }
+
     override fun observeConnectionState(address: String, port: Int): Flow<ConnectionStatus> =
         callbackFlow {
-            val socket = DatagramSocket()
+            val socket = withContext(Dispatchers.IO) { getOrCreateSocket(port) }
             socket.soTimeout = 3000
-            val target = InetAddress.getByName(address)
-            var lastHeartbeat = 0L
+            val target = withContext(Dispatchers.IO) { InetAddress.getByName(address) }
+            var lastHeartbeat = System.currentTimeMillis()
             var seq = 0
 
-            val sendJob = launch {
+            val sendJob = launch(Dispatchers.IO) {
                 while (isActive) {
                     runCatching {
                         val pkt = buildGcsHeartbeat(seq++ and 0xFF)
@@ -306,7 +320,7 @@ class UdpMavlinkDataSource : MavlinkDataSourceContract {
                 }
             }
 
-            val receiveJob = launch {
+            val receiveJob = launch(Dispatchers.IO) {
                 val buf = ByteArray(512)
                 val dp = DatagramPacket(buf, buf.size)
                 while (isActive) {
@@ -314,10 +328,12 @@ class UdpMavlinkDataSource : MavlinkDataSourceContract {
                         socket.receive(dp)
                         if (parseMsgId(buf, dp.length) == 0) {
                             lastHeartbeat = System.currentTimeMillis()
+                            android.util.Log.d("UdpMavlink", "HEARTBEAT受信 from ${dp.address}:${dp.port}")
                             trySend(ConnectionStatus.Connected(lastHeartbeat))
                         }
                     } catch (_: java.net.SocketTimeoutException) {
-                        if (System.currentTimeMillis() - lastHeartbeat > 3000) {
+                        android.util.Log.d("UdpMavlink", "timeout, lastHeartbeat=${System.currentTimeMillis() - lastHeartbeat}ms ago")
+                        if (System.currentTimeMillis() - lastHeartbeat > 30_000) {
                             trySend(ConnectionStatus.Disconnected)
                         }
                     } catch (e: Exception) {
@@ -329,19 +345,18 @@ class UdpMavlinkDataSource : MavlinkDataSourceContract {
             awaitClose {
                 sendJob.cancel()
                 receiveJob.cancel()
-                socket.close()
             }
         }
 
     override fun observeDroneState(address: String, port: Int): Flow<DroneState> =
         callbackFlow {
-            val socket = DatagramSocket()
+            val socket = withContext(Dispatchers.IO) { getOrCreateSocket(port) }
             socket.soTimeout = 3000
-            val target = InetAddress.getByName(address)
+            val target = withContext(Dispatchers.IO) { InetAddress.getByName(address) }
             var seq = 0
             var state = DroneState()
 
-            val sendJob = launch {
+            val sendJob = launch(Dispatchers.IO) {
                 while (isActive) {
                     runCatching {
                         val pkt = buildGcsHeartbeat(seq++ and 0xFF)
@@ -351,7 +366,7 @@ class UdpMavlinkDataSource : MavlinkDataSourceContract {
                 }
             }
 
-            val receiveJob = launch {
+            val receiveJob = launch(Dispatchers.IO) {
                 val buf = ByteArray(512)
                 val dp = DatagramPacket(buf, buf.size)
                 while (isActive) {
@@ -385,11 +400,13 @@ class UdpMavlinkDataSource : MavlinkDataSourceContract {
             awaitClose {
                 sendJob.cancel()
                 receiveJob.cancel()
-                socket.close()
             }
         }
 
-    override fun disconnect() {}
+    override fun disconnect() {
+        udpSocket?.close()
+        udpSocket = null
+    }
 
     override suspend fun takeoff(altitudeMeters: Float): RunStatus<Unit> = RunStatus.Error("UDP直接モードでは未対応")
     override suspend fun land(): RunStatus<Unit> = RunStatus.Error("UDP直接モードでは未対応")
