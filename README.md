@@ -1,48 +1,71 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Desktop (JVM).
+# drone-controller
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+MAVLink対応Androidドローンコントローラーアプリ（KMP）
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+![Kotlin](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?logo=kotlin&logoColor=white)
+![Android](https://img.shields.io/badge/Android-minSdk26-3DDC84?logo=android&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-blue)
 
-### Build and Run Android Application
+## スクリーンショット
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+| 接続画面 | コントローラー画面 |
+|---|---|
+| ![接続](document/screenshots/connection.png) | ![コントローラー](document/screenshots/controller.png) |
 
-### Build and Run Desktop (JVM) Application
+| ミッション計画 | BLE設定 |
+|---|---|
+| ![ミッション](document/screenshots/mission.png) | ![BLE](document/screenshots/ble.png) |
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
+## 概要
 
-### Build and Run iOS Application
+NTT e-Drone Technology 応募用ポートフォリオ。  
+PX4 SITLシミュレーターとの実際の通信確認済み。  
+KMP（Kotlin Multiplatform）+ Compose Multiplatform で構築。
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+## 技術スタック
 
----
+| カテゴリ | 技術 |
+|---|---|
+| UI | Kotlin / Compose Multiplatform / Material3 |
+| 通信 | MAVLink / io.mavsdk / gRPC / UDP |
+| DI・非同期 | Koin / Coroutines + StateFlow |
+| アーキテクチャ | Clean Architecture + MVVM |
+| 地図 | OpenStreetMap（osmdroid） |
+| 周辺機器 | BLE（GATT） |
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## 機能一覧
+
+- MAVLink接続・HEARTBEAT受信
+- リアルタイムテレメトリ表示（高度・バッテリー・速度・衛星数・姿勢）
+- 基本コマンド（離陸・着陸・RTL）
+- 仮想ジョイスティック（MAVLink送信）
+- BLE物理コントローラー連携
+- ミッション計画（ウェイポイント設定・自律飛行）
+- 地図表示（OpenStreetMap）
+- Foreground Service（画面OFF時も接続維持）
+- モックモード（SITL不要でUI確認可能）
+
+## アーキテクチャ
+
+```
+commonMain
+├── ui/         # Compose Multiplatform
+├── domain/     # UseCase・Repository Interface
+└── data/       # MAVLink・BLE実装
+androidMain     # Android固有処理
+iosMain         # iOS（将来対応）
+```
+
+## 接続構成
+
+```
+drone-controller（Android）
+  → gRPC:50051 → mavsdk_server（PC）
+  → UDP:14540  → PX4 SITL / 実機
+```
+
+## ビルド方法
+
+```bash
+./gradlew :composeApp:assembleDebug
+```
